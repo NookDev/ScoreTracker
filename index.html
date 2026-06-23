@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Campaign Ledger — 40K Battle Record</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Oswald:wght@400;500;600&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0f0f0f;
+    --ink-2:#1a1a1a;
+    --panel:#1a1a1a;
+    --panel-2:#222;
+    --line:#2e2e2e;
+    --brass:#c8a84b;
+    --brass-bright:#f0c040;
+    --bone:#e8e8e8;
+    --bone-dim:#777;
+    --olive:#4caf7d;
+    --oxide:#e05252;
+    --steel:#888;
+    --shadow:rgba(0,0,0,.6);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    background-color:#0f0f0f;
+    background-image:linear-gradient(rgba(0,0,0,0.55),rgba(0,0,0,0.55)),url('armageddon-bg.jpg');
+    background-size:cover;
+    background-position:center;
+    background-attachment:fixed;
+    color:var(--bone);
+    font-family:"Barlow",system-ui,sans-serif;
+    font-size:16px;
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+    padding:0 0 80px;
+  }
+  .wrap{max-width:980px;margin:0 auto;padding:18px 24px 24px;background:rgba(15,15,15,0.82);min-height:100vh}
+
+  /* ---------- Masthead ---------- */
+  .masthead{
+    text-align:center;
+    padding:38px 0 22px;
+    border-bottom:1px solid var(--line);
+    position:relative;
+  }
+  .eyebrow{
+    font-family:"Oswald",sans-serif;
+    text-transform:uppercase;
+    letter-spacing:.42em;
+    font-size:12px;
+    color:var(--brass);
+    font-weight:500;
+    margin:0 0 10px;
+    padding-left:.42em;
+  }
+  .masthead h1{
+    font-family:"Cinzel",serif;
+    font-weight:700;
+    font-size:clamp(28px,6vw,46px);
+    margin:0;
+    color:var(--bone);
+    letter-spacing:.02em;
+    line-height:1.05;
+    text-shadow:
+      -1px -1px 0 #000,
+       1px -1px 0 #000,
+      -1px  1px 0 #000,
+       1px  1px 0 #000,
+       0 2px 6px rgba(0,0,0,0.9);
+  }
+  .masthead .sub{
+    font-family:"Oswald",sans-serif;
+    text-transform:uppercase;
+    letter-spacing:.28em;
+    font-size:11px;
+    color:var(--bone-dim);
+    margin-top:12px;
+  }
+
+  /* ---------- Seal / hero ---------- */
+  .seal{
+    margin:26px 0 8px;
+    border:1px solid var(--brass);
+    box-shadow:0 0 0 4px var(--ink-2),0 0 0 5px var(--line),0 18px 40px -22px var(--shadow);
+    background:var(--panel);
+    border-radius:3px;
+    display:grid;
+    grid-template-columns:1.15fr 1fr;
+  }
+  @media(max-width:640px){.seal{grid-template-columns:1fr}}
+  .seal-rate{
+    padding:26px 24px;
+    text-align:center;
+    border-right:1px solid var(--line);
+    display:flex;flex-direction:column;justify-content:center;
+  }
+  @media(max-width:640px){.seal-rate{border-right:none;border-bottom:1px solid var(--line)}}
+  .seal-rate .pct{
+    font-family:"Cinzel",serif;
+    font-weight:700;
+    font-size:clamp(54px,15vw,84px);
+    line-height:1;
+    color:var(--brass-bright);
+    text-shadow:0 2px 0 rgba(0,0,0,.3);
+  }
+  .seal-rate .lbl{
+    font-family:"Oswald",sans-serif;
+    text-transform:uppercase;letter-spacing:.34em;
+    font-size:12px;color:var(--bone-dim);margin-top:10px;padding-left:.34em;
+  }
+  .seal-rate .rec{
+    font-family:"Oswald",sans-serif;
+    font-size:20px;letter-spacing:.08em;margin-top:14px;color:var(--bone);
+  }
+  .seal-rate .rec span{color:var(--bone-dim);font-size:13px}
+  .seal-tallies{display:grid;grid-template-columns:repeat(3,1fr)}
+  .tally{
+    padding:20px 10px;text-align:center;border-right:1px solid var(--line);
+    display:flex;flex-direction:column;justify-content:center;gap:6px;
+  }
+  .tally:last-child{border-right:none}
+  .tally .n{font-family:"Cinzel",serif;font-weight:600;font-size:30px;line-height:1}
+  .tally .t{font-family:"Oswald",sans-serif;text-transform:uppercase;letter-spacing:.2em;font-size:10px;color:var(--bone-dim)}
+  .tally.win .n{color:var(--olive)}
+  .tally.loss .n{color:var(--oxide)}
+  .tally.draw .n{color:var(--steel)}
+  .total-line{
+    text-align:center;font-family:"Oswald",sans-serif;text-transform:uppercase;
+    letter-spacing:.24em;font-size:11px;color:var(--bone-dim);margin:14px 0 0;
+  }
+  .total-line b{color:var(--brass)}
+
+  /* ---------- Section headers ---------- */
+  .sec{margin-top:36px}
+  .sec-head{
+    display:flex;align-items:baseline;gap:14px;
+    border-bottom:1px solid var(--line);padding-bottom:8px;margin-bottom:16px;
+  }
+  .sec-head h2{
+    font-family:"Oswald",sans-serif;text-transform:uppercase;letter-spacing:.22em;
+    font-weight:600;font-size:15px;margin:0;color:var(--brass);
+  }
+  .sec-head .hint{font-size:12px;color:var(--bone-dim);margin-left:auto}
+
+  /* ---------- Form ---------- */
+  .form{
+    background:var(--panel);
+    border:1px solid var(--line);border-radius:3px;padding:18px;
+  }
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px 16px}
+  @media(max-width:640px){.grid{grid-template-columns:1fr}}
+  .field{display:flex;flex-direction:column;gap:6px}
+  .field.span{grid-column:1/-1}
+  label{
+    font-family:"Oswald",sans-serif;text-transform:uppercase;letter-spacing:.16em;
+    font-size:11px;color:var(--bone-dim);
+  }
+  label .opt{color:#555;text-transform:none;letter-spacing:0;font-size:10px}
+  input,select{
+    background:var(--ink);border:1px solid var(--line);border-radius:2px;
+    color:var(--bone);font-family:"Barlow",sans-serif;font-size:15px;
+    padding:10px 11px;width:100%;
+  }
+  input:focus,select:focus{outline:2px solid var(--brass);outline-offset:0;border-color:var(--brass)}
+  select option{background:var(--ink-2);color:var(--bone)}
+  select optgroup{background:var(--ink-2);color:var(--brass);font-family:"Oswald",sans-serif;font-style:normal}
+  .vs-split{display:grid;grid-template-columns:1fr 1fr;gap:14px 16px;grid-column:1/-1}
+  @media(max-width:640px){.vs-split{grid-template-columns:1fr}}
+  .side{
+    border:1px solid var(--line);border-radius:3px;padding:14px;
+    background:var(--panel-2);
+  }
+  .side .tag{
+    font-family:"Oswald",sans-serif;text-transform:uppercase;letter-spacing:.2em;
+    font-size:16px;margin:0 0 12px;display:flex;align-items:center;gap:8px;
+  }
+  .side.you .tag{color:var(--brass)}
+  .side.foe .tag{color:var(--oxide)}
+  .side .tag::after{content:"";flex:1;height:1px;background:var(--line)}
+  .row2{display:grid;grid-template-columns:1fr;gap:12px}
+  .actions{display:flex;gap:12px;align-items:center;margin-top:16px;flex-wrap:wrap}
+  button{
+    font-family:"Oswald",sans-serif;text-transform:uppercase;letter-spacing:.16em;
+    cursor:pointer;border-radius:2px;font-size:13px;
+  }
+  .btn-log{
+    background:var(--brass);color:#0f0f0f;border:1px solid var(--brass-bright);
+    padding:12px 26px;font-weight:600;
+  }
+  .btn-log:hover{background:var(--brass-bright)}
+  .btn-ghost{
+    background:transparent;color:var(--bone-dim);border:1px solid var(--line);padding:11px 18px;
+  }
+  .btn-ghost:hover{color:var(--bone);border-color:var(--bone-dim)}
+  .err{color:var(--oxide);font-size:13px;font-family:"Barlow";min-height:0}
+
+  /* ---------- Filters ---------- */
+  .filters{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end}
+  .filters .field{min-width:170px;flex:1}
+  .filter-note{font-family:"Oswald";text-transform:uppercase;letter-spacing:.16em;font-size:11px;color:var(--bone-dim);width:100%}
+
+  /* ---------- Honours table ---------- */
+  .honours{width:100%;border-collapse:collapse;font-size:14px}
+  .honours th{
+    font-family:"Oswald";text-transform:uppercase;letter-spacing:.14em;font-size:11px;
+    color:var(--bone-dim);text-align:right;padding:8px 12px;border-bottom:1px solid var(--line);font-weight:500;
+  }
+  .honours th:first-child{text-align:left}
+  .honours td{padding:11px 12px;border-bottom:1px solid rgba(46,46,46,.8);text-align:right}
+  .honours td:first-child{text-align:left;font-weight:500;color:var(--bone)}
+  .honours tr.clickable{cursor:pointer}
+  .honours tr.clickable:hover td{background:rgba(200,168,75,.07)}
+  .honours tr.active td{background:rgba(200,168,75,.12)}
+  .honours .wr{font-family:"Cinzel";font-weight:600;color:var(--brass-bright)}
+  .mini-rec{color:var(--bone-dim);font-size:13px}
+
+  /* ---------- Ledger ---------- */
+  .ledger{display:flex;flex-direction:column;gap:0}
+  .entry{
+    display:grid;grid-template-columns:64px 1fr auto;gap:14px;align-items:center;
+    padding:14px 4px;border-bottom:1px solid rgba(46,46,46,.8);
+  }
+  .entry .badge{
+    font-family:"Oswald";text-transform:uppercase;letter-spacing:.12em;font-size:11px;
+    text-align:center;padding:7px 0;border-radius:2px;border:1px solid;font-weight:600;
+  }
+  .badge.win{color:var(--olive);border-color:rgba(76,175,125,.5);background:rgba(76,175,125,.1)}
+  .badge.loss{color:var(--oxide);border-color:rgba(224,82,82,.5);background:rgba(224,82,82,.1)}
+  .badge.draw{color:var(--steel);border-color:rgba(136,136,136,.5);background:rgba(136,136,136,.1)}
+  .entry .matchup{min-width:0}
+  .entry .factions{font-family:"Cinzel";font-size:15px;color:var(--bone);font-weight:500}
+  .entry .factions .v{color:var(--bone-dim);font-family:"Oswald";font-size:12px;margin:0 8px;letter-spacing:.1em}
+  .entry .meta{font-size:12.5px;color:var(--bone-dim);margin-top:3px}
+  .entry .meta .loc::before{content:"·";margin:0 7px}
+  .entry .right{display:flex;align-items:center;gap:14px}
+  .entry .score{font-family:"Cinzel";font-size:18px;font-weight:600;white-space:nowrap}
+  .entry .score .mine{color:var(--brass-bright)}
+  .entry .score .sep{color:var(--bone-dim);margin:0 4px;font-size:14px}
+  .del{
+    background:none;border:none;color:#555;font-size:18px;line-height:1;padding:6px;cursor:pointer;
+  }
+  .del:hover{color:var(--oxide)}
+  .entry .dets{font-family:"Oswald",sans-serif;font-size:12px;letter-spacing:.04em;color:var(--brass);opacity:.9;margin-top:3px}
+  .entry .dets .v{color:var(--bone-dim);margin:0 7px;font-size:11px}
+  .toggle{display:inline-flex;border:1px solid var(--line);border-radius:2px;overflow:hidden}
+  .tg{background:transparent;color:var(--bone-dim);border:none;padding:6px 12px;font-size:11px;letter-spacing:.12em}
+  .tg.on{background:var(--brass);color:#0f0f0f;font-weight:600}
+  .tg:not(.on):hover{color:var(--bone)}
+
+  .empty{
+    text-align:center;padding:46px 20px;color:var(--bone-dim);
+    border:1px dashed var(--line);border-radius:3px;
+  }
+  .empty .big{font-family:"Cinzel";font-size:18px;color:var(--bone);margin-bottom:6px}
+
+  .footnote{margin-top:42px;text-align:center;font-size:12px;color:#555;font-family:"Oswald";letter-spacing:.1em;text-transform:uppercase}
+  .loading{text-align:center;padding:60px;color:var(--bone-dim);font-family:"Oswald";letter-spacing:.2em;text-transform:uppercase}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="masthead">
+    <p class="eyebrow">Warhammer 40,000 · 11th Edition</p>
+    <h1>Campaign Ledger</h1>
+    <div class="sub">Personal Battle Record</div>
+  </header>
+
+  <div id="app">
+    <div class="loading">Loading muster rolls…</div>
+  </div>
+
+  <p class="footnote">Win rate = victories ÷ games played · Data saved to this ledger automatically</p>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  // ---- storage abstraction (localStorage for static hosting) ----
+  const KEY = "ledger:games";
+  const PKEY = "ledger:profile";
+  function load(k){
+    try{ return localStorage.getItem(k); }catch(e){ return null; }
+  }
+  function save(k,v){
+    try{ localStorage.setItem(k,v); }catch(e){}
+  }
+
+  // ---- state ----
+  let games = [];
+  let profile = { name:"", faction:"", detachment:"" };
+  let honoursMode = "faction";
+  let filters = { you:"all", opp:"all", result:"all" };
+
+  const app = document.getElementById("app");
+
+  // === BSDATA:START — auto-generated by scripts/refresh-factions.py, do not edit by hand ===
+  const FACTION_GROUPS=[{"g": "Space Marines", "f": ["Space Marines", "Dark Angels", "Blood Angels", "Space Wolves", "Black Templars", "Deathwatch"]}, {"g": "Imperium", "f": ["Grey Knights", "Adepta Sororitas", "Adeptus Custodes", "Adeptus Mechanicus", "Astra Militarum", "Imperial Knights", "Imperial Agents"]}, {"g": "Chaos", "f": ["Chaos Space Marines", "Death Guard", "Thousand Sons", "World Eaters", "Emperor’s Children", "Chaos Daemons", "Chaos Knights"]}, {"g": "Xenos", "f": ["Aeldari", "Drukhari", "Necrons", "Orks", "T’au Empire", "Tyranids", "Genestealer Cults", "Leagues of Votann"]}];
+  const DETACHMENTS={"Space Marines": ["1st Company Task Force", "Anvil Siege Force", "Armoured Speartip", "Bastion Task Force", "Blade of Ultramar", "Ceramite Sentinels", "Emperor’s Shield", "Firestorm Assault Force", "Forgefather’s Seekers", "Fulguris Task Force", "Gladius Task Force", "Hammer of Avernii", "Headhunter Task Force", "Ironstorm Spearhead", "Librarius Conclave", "Orbital Assault Force", "Reclamation Force", "Shadowmark Talon", "Spearpoint Task Force", "Stormlance Task Force", "Subversion Assets", "Vanguard Spearhead"], "Dark Angels": ["1st Company Task Force", "Anvil Siege Force", "Armoured Speartip", "Bastion Task Force", "Ceramite Sentinels", "Company of Hunters", "Dark Age Arsenal", "Darkflight Pursuit", "Firestorm Assault Force", "Fulguris Task Force", "Gladius Task Force", "Headhunter Task Force", "Inner Circle Task Force", "Interrogation Conclave", "Ironstorm Spearhead", "Librarius Conclave", "Lion’s Blade Task Force", "Orbital Assault Force", "Stormlance Task Force", "Subversion Assets", "Unforgiven Task Force", "Vanguard Spearhead", "Wrath of the Rock"], "Blood Angels": ["1st Company Task Force", "Angelic Inheritors", "Anvil Siege Force", "Armoured Speartip", "Bastion Task Force", "Ceramite Sentinels", "Encarmine Speartip", "Firestorm Assault Force", "Fulguris Task Force", "Gladius Task Force", "Headhunter Task Force", "Ironstorm Spearhead", "Legacy of Grace", "Liberator Assault Group", "Librarius Conclave", "Orbital Assault Force", "Rage-Cursed Onslaught", "Stormlance Task Force", "Subversion Assets", "The Angelic Host", "The Lost Brethren", "Vanguard Spearhead", "Wrath of the Doomed"], "Space Wolves": ["1st Company Task Force", "Anvil Siege Force", "Armoured Speartip", "Bastion Task Force", "Ceramite Sentinels", "Champions of Fenris", "Firestorm Assault Force", "Fulguris Task Force", "Gladius Task Force", "Headhunter Task Force", "Ironstorm Spearhead", "Legends of Saga and Song", "Librarius Conclave", "Orbital Assault Force", "Saga of the Beastslayer", "Saga of the Bold", "Saga of the Great Wolf", "Saga of the Hunter", "Stormlance Task Force", "Subversion Assets", "Vanguard Spearhead", "Veterans of the Fang"], "Black Templars": ["Anvil Siege Force", "Armoured Speartip", "Bastion Task Force", "Ceramite Sentinels", "Companions of Vehemence", "Firestorm Assault Force", "Fulguris Task Force", "Gladius Task Force", "Godhammer Assault Force", "Headhunter Task Force", "Ironstorm Spearhead", "Marshal’s Household", "Orbital Assault Force", "Stormlance Task Force", "Subversion Assets", "The Living Miracle", "Vanguard Spearhead", "Vindication Task Force", "Wrathful Procession"], "Deathwatch": ["1st Company Task Force", "Anvil Siege Force", "Armoured Speartip", "Bastion Task Force", "Black Spear Task Force", "Ceramite Sentinels", "Firestorm Assault Force", "Fulguris Task Force", "Gladius Task Force", "Headhunter Task Force", "Ironstorm Spearhead", "Librarius Conclave", "Orbital Assault Force", "Stormlance Task Force", "Subversion Assets", "Vanguard Spearhead"], "Grey Knights": ["Argent Assault", "Augurium Task Force", "Banishers", "Brotherhood Strike", "Fires of Purgation", "Hallowed Conclave", "Immaterial Interdiction", "Sanctic Spearhead", "Warpbane Task Force"], "Adepta Sororitas": ["Army of Faith", "Bringers of Flame", "Champions of Faith", "Chorus of Condemnation", "Hallowed Martyrs", "Penitent Host", "Sacred Champions", "Sanctified Orators"], "Adeptus Custodes": ["Auric Champions", "Lions of the Emperor", "Might of the Moritoi", "Null Maiden Vigil", "Shield Host", "Silent Hunters", "Solar Spearhead", "Talons of the Emperor", "Tharanatoi Hammerblow"], "Adeptus Mechanicus": ["Cohort Acquisitus", "Cohort Cybernetica", "Data-Psalm Conclave", "Eradication Cohort", "Explorator Maniple", "Haloscreed Battle Clade", "Lords of the Forge", "Luminen Auto-Choir", "Rad-Zone Corps", "Skitarii Hunter Cohort"], "Astra Militarum": ["Abhuman Auxiliaries", "Armoured Infantry", "Bridgehead Strike", "Combined Arms", "Designation Force", "Grizzled Company", "Hammer of the Emperor", "Mechanised Assault", "Recon Element", "Siege Regiment", "Steel Hammer"], "Imperial Knights": ["Dominus Foebreakers", "Freeblade Company", "Gate Warden Lance", "Questor Forgepact", "Questoris Companions", "Spearhead-At-Arms", "Throne-Bonded Outriders", "Valourstrike Lance"], "Imperial Agents": ["Imperialis Fleet", "Ordo Hereticus, Purgation Force", "Ordo Malleus, Daemon Hunters", "Ordo Xenos, Alien Hunters", "Veiled Blade Elimination Force"], "Chaos Space Marines": ["Cabal of Chaos", "Chaos Cult", "Creations of Bile", "Cult of the Arkifane", "Deceptors", "Devotees of Destruction", "Dread Talons", "Fellhammer Siege-Host", "Huron’s Marauders", "Murdertalon Raiders", "Nightmare Hunt", "Pactbound Zealots", "Renegade Raiders", "Renegade Warband", "Soulforged Warpack", "Veterans of the Long War", "Warpstrike Champions"], "Death Guard": ["Champions of Contagion", "Contagion Engines", "Death Lord’s Chosen", "Flyblown Host", "Mortarion’s Hammer", "Paragons of Putrescence", "Shamblerot Vectorium", "Tallyband Summoners", "Virulent Vectorium"], "Thousand Sons": ["Changehost of Deceit", "Grand Coven", "Hexwarp Thrallband", "Ritual of Regeneration", "Rubricae Phalanx", "Sekhetar Cohort", "Servants of Change", "Warpforged Cabal", "Warpmeld Pact"], "World Eaters": ["Berzerker Warband", "Brazen Engines", "Butchers of Khorne", "Cult of Blood", "Goretrack Onslaught", "Khorne Daemonkin", "Possessed Slaughterband", "Vessels of Wrath"], "Emperor’s Children": ["Carnival of Excess", "Coterie of the Conceited", "Court of the Phoenician", "Elegant Brutes", "Frenzied Host", "Mercurial Host", "Peerless Bladesmen", "Rapid Evisceration", "Slaanesh’s Chosen", "Spectacle of Slaughter"], "Chaos Daemons": ["Blood Legion", "Cavalcade of Chaos", "Daemonic Incursion", "Legion of Excess", "Lords of the Warp", "Plague Legion", "Scintillating Legion", "Shadow Legion", "Warptide"], "Chaos Knights": ["Bastions of Tyranny", "Helhunt Lance", "Houndpack Lance", "Hunting Warpack", "Iconoclast Fiefdom", "Infernal Lance", "Lords of Dread", "Traitoris Lance"], "Aeldari": ["Armoured Warhost", "Aspect Host", "Corsair Coterie", "Devoted of Ynnead", "Eldritch Raiders", "Fateful Performance", "Ghosts of the Webway", "Guardian Battlehost", "Path of the Outcast", "Seer Council", "Serpent’s Brood", "Spirit Conclave", "Twilight Flickers", "Warhost", "Windrider Host"], "Drukhari": ["Covenite Coterie", "Exhibition of Slaughter", "Kabalite Agonysts", "Kabalite Cartel", "Realspace Raiders", "Reaper’s Wager", "Skysplinter Assault", "Spectacle of Spite", "Tools of Torment"], "Necrons": ["Annihilation Legion", "Awakened Dynasty", "Canoptek Court", "Cryptek Conclave", "Cursed Legion", "Hand of the Dynasty", "Hypercrypt Legion", "Obeisance Phalanx", "Pantheon of Woe", "Skyshroud Spearhead", "Starshatter Arsenal", "The Phaeron’s Armoury"], "Orks": ["Blitz Brigade", "Bully Boyz", "Da Big Hunt", "Dread Mob", "Freebooter Krew", "Green Tide", "Kult of Speed", "More Dakka!", "Rollin' Deff", "Speedwaaagh!", "Taktikal Brigade", "War Horde"], "T’au Empire": ["Advanced Acquisition Cadre", "Auxiliary Cadre", "Experimental Prototype Cadre", "Kauyon", "Kroot Hunting Pack", "Mont’Ka", "Retaliation Cadre"], "Tyranids": ["Ambush Predators", "Assimilation Swarm", "Crusher Stampede", "Invasion Fleet", "Subterranean Assault", "Synaptic Nexus", "Talons of the Norn Queen", "Unending Swarm", "Vanguard Onslaught", "Warrior Bioform Onslaught"], "Genestealer Cults": ["Biosanctic Broodsurge", "Brood Brothers Auxilia", "Final Day", "Heroes of the Uprising", "Host of Ascension", "Outlander Claw", "Purestrain Broodswarm", "Xenocreed Congregation", "Xenocult Masses"], "Leagues of Votann": ["Armoured Trailblazers", "Brandfast Oathband", "Dêlve Assault Shift", "Farseekers", "Hearthband", "Hearthfyre Arsenal", "Hearthguard Covenant", "Mercenary Oathband", "Needgaârd Oathband", "Persecution Prospect"]};
+  // === BSDATA:END ===
+  function factionOptions(sel){
+    let h=`<option value="" ${sel?"":"selected"} disabled>Select faction…</option>`;
+    FACTION_GROUPS.forEach(grp=>{
+      h+=`<optgroup label="${grp.g}">`+grp.f.map(f=>`<option value="${esc(f)}" ${sel===f?"selected":""}>${esc(f)}</option>`).join("")+`</optgroup>`;
+    });
+    return h;
+  }
+  function detachmentOptions(faction, sel){
+    const list = DETACHMENTS[faction] || [];
+    if(!list.length) return `<option value="">— none —</option>`;
+    let h=`<option value="">— optional —</option>`;
+    h+=list.map(dn=>`<option value="${esc(dn)}" ${sel===dn?"selected":""}>${esc(dn)}</option>`).join("");
+    return h;
+  }
+
+  function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
+  function esc(s){ return (s==null?"":String(s)).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+  function today(){ const d=new Date(); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
+  function resultOf(g){ if(g.youScore>g.oppScore) return "win"; if(g.youScore<g.oppScore) return "loss"; return "draw"; }
+  function fmtDate(s){ if(!s) return ""; const d=new Date(s+"T00:00:00"); if(isNaN(d)) return s; return d.toLocaleDateString(undefined,{day:"numeric",month:"short",year:"numeric"}); }
+
+  function applyFilters(list){
+    return list.filter(g=>{
+      if(filters.you!=="all" && g.youFaction!==filters.you) return false;
+      if(filters.opp!=="all" && g.oppFaction!==filters.opp) return false;
+      if(filters.result!=="all" && resultOf(g)!==filters.result) return false;
+      return true;
+    });
+  }
+  function tally(list){
+    let w=0,l=0,d=0;
+    list.forEach(g=>{ const r=resultOf(g); if(r==="win")w++; else if(r==="loss")l++; else d++; });
+    const t=list.length;
+    return { w,l,d,t, rate: t? Math.round((w/t)*100):0 };
+  }
+
+  // breakdown grouped by your faction OR your detachment, respecting active filters
+  function breakdown(mode){
+    const base = games.filter(g=>{
+      if(filters.opp!=="all" && g.oppFaction!==filters.opp) return false;
+      if(filters.result!=="all" && resultOf(g)!==filters.result) return false;
+      if(mode==="detachment" && filters.you!=="all" && g.youFaction!==filters.you) return false;
+      return true;
+    });
+    const map={};
+    base.forEach(g=>{
+      const key = mode==="detachment" ? (g.youDetachment||"(no detachment)") : (g.youFaction||"—");
+      (map[key]=map[key]||[]).push(g);
+    });
+    return Object.keys(map).map(k=>{
+      const s=tally(map[k]); return { key:k, ...s };
+    }).sort((a,b)=> b.rate-a.rate || b.t-a.t);
+  }
+
+  function factionsForFilter(picker){
+    const set=new Set();
+    games.forEach(g=>{ const v = picker==="you"?g.youFaction:g.oppFaction; if(v) set.add(v); });
+    return Array.from(set).sort();
+  }
+
+  // ---- render ----
+  function render(){
+    const filtered = applyFilters(games);
+    const s = tally(filtered);
+    const youOpts = factionsForFilter("you");
+    const oppOpts = factionsForFilter("opp");
+    const filterActive = filters.you!=="all"||filters.opp!=="all"||filters.result!=="all";
+
+    app.innerHTML = `
+      <div class="seal">
+        <div class="seal-rate">
+          <div class="pct">${s.rate}<span style="font-size:.5em">%</span></div>
+          <div class="lbl">Win Rate</div>
+          <div class="rec">${s.w}<span> W</span> · ${s.l}<span> L</span> · ${s.d}<span> D</span></div>
+        </div>
+        <div class="seal-tallies">
+          <div class="tally win"><div class="n">${s.w}</div><div class="t">Victories</div></div>
+          <div class="tally loss"><div class="n">${s.l}</div><div class="t">Defeats</div></div>
+          <div class="tally draw"><div class="n">${s.d}</div><div class="t">Draws</div></div>
+        </div>
+      </div>
+      <div class="total-line"><b>${s.t}</b> game${s.t===1?"":"s"} ${filterActive?"in current view":"on record"}</div>
+
+      <section class="sec">
+        <div class="sec-head"><h2>Log an Engagement</h2></div>
+        <div class="form">
+          <div class="grid">
+            <div class="vs-split">
+              <div class="side you">
+                <p class="tag">Your Force</p>
+                <div class="row2">
+                  <div class="field">
+                    <label>Faction</label>
+                    <select id="f-youF">${factionOptions(profile.faction)}</select>
+                  </div>
+                  <div class="field">
+                    <label>Detachment <span class="opt">optional</span></label>
+                    <select id="f-youDet">${detachmentOptions(profile.faction, profile.detachment)}</select>
+                  </div>
+                  <div class="field">
+                    <label>Player <span class="opt">optional</span></label>
+                    <input id="f-youN" placeholder="You" value="${esc(profile.name)}" autocomplete="off">
+                  </div>
+                  <div class="field">
+                    <label>Your Score</label>
+                    <input id="f-youS" type="number" inputmode="numeric" min="0" placeholder="0">
+                  </div>
+                </div>
+              </div>
+              <div class="side foe">
+                <p class="tag">Opponent</p>
+                <div class="row2">
+                  <div class="field">
+                    <label>Faction</label>
+                    <select id="f-oppF">${factionOptions("")}</select>
+                  </div>
+                  <div class="field">
+                    <label>Detachment <span class="opt">optional</span></label>
+                    <select id="f-oppDet">${detachmentOptions("", "")}</select>
+                  </div>
+                  <div class="field">
+                    <label>Player <span class="opt">optional</span></label>
+                    <input id="f-oppN" placeholder="Opponent" autocomplete="off">
+                  </div>
+                  <div class="field">
+                    <label>Their Score</label>
+                    <input id="f-oppS" type="number" inputmode="numeric" min="0" placeholder="0">
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="field">
+              <label>Date</label>
+              <input id="f-date" type="date" value="${today()}">
+            </div>
+            <div class="field">
+              <label>Location <span class="opt">optional</span></label>
+              <input id="f-loc" placeholder="e.g. Tabletop Perth" autocomplete="off">
+            </div>
+          </div>
+          <div class="actions">
+            <button class="btn-log" id="btn-log">Record Battle</button>
+            <span class="err" id="form-err"></span>
+          </div>
+        </div>
+      </section>
+
+      <section class="sec">
+        <div class="sec-head"><h2>Filters</h2>${filterActive?`<span class="hint"><button class="btn-ghost" id="clear-filters" style="padding:6px 12px">Clear</button></span>`:""}</div>
+        <div class="filters">
+          <div class="field">
+            <label>Your Faction</label>
+            <select id="flt-you">
+              <option value="all">All factions</option>
+              ${youOpts.map(f=>`<option value="${esc(f)}" ${filters.you===f?"selected":""}>${esc(f)}</option>`).join("")}
+            </select>
+          </div>
+          <div class="field">
+            <label>Opponent Faction</label>
+            <select id="flt-opp">
+              <option value="all">All factions</option>
+              ${oppOpts.map(f=>`<option value="${esc(f)}" ${filters.opp===f?"selected":""}>${esc(f)}</option>`).join("")}
+            </select>
+          </div>
+          <div class="field">
+            <label>Result</label>
+            <select id="flt-res">
+              <option value="all" ${filters.result==="all"?"selected":""}>All results</option>
+              <option value="win" ${filters.result==="win"?"selected":""}>Wins</option>
+              <option value="loss" ${filters.result==="loss"?"selected":""}>Losses</option>
+              <option value="draw" ${filters.result==="draw"?"selected":""}>Draws</option>
+            </select>
+          </div>
+        </div>
+      </section>
+
+      ${renderHonours()}
+
+      <section class="sec">
+        <div class="sec-head"><h2>Battle Log</h2><span class="hint">${filtered.length} shown</span></div>
+        ${renderLedger(filtered)}
+      </section>
+    `;
+
+    wire();
+  }
+
+  function renderHonours(){
+    const mode = honoursMode;
+    const rows = breakdown(mode);
+    if(!rows.length) return "";
+    const colHead = mode==="detachment" ? "Detachment" : "Faction";
+    return `
+      <section class="sec">
+        <div class="sec-head"><h2>Battle Honours</h2>
+          <span class="hint"><span class="toggle">
+            <button class="tg ${mode==="faction"?"on":""}" data-mode="faction">By Faction</button>
+            <button class="tg ${mode==="detachment"?"on":""}" data-mode="detachment">By Detachment</button>
+          </span></span>
+        </div>
+        <table class="honours">
+          <thead><tr><th>${colHead}</th><th>Games</th><th>Record</th><th>Win&nbsp;Rate</th></tr></thead>
+          <tbody>
+            ${rows.map(r=>{
+              const clickable = mode==="faction";
+              const active = clickable && filters.you===r.key;
+              return `<tr class="${clickable?"clickable":""} ${active?"active":""}" ${clickable?`data-faction="${esc(r.key)}"`:""}>
+                <td>${esc(r.key)}</td>
+                <td>${r.t}</td>
+                <td class="mini-rec">${r.w}–${r.l}–${r.d}</td>
+                <td class="wr">${r.rate}%</td>
+              </tr>`;
+            }).join("")}
+          </tbody>
+        </table>
+      </section>`;
+  }
+
+  function renderLedger(list){
+    if(!games.length){
+      return `<div class="empty"><div class="big">No engagements logged</div>Record your first battle above and your win rate will appear here.</div>`;
+    }
+    if(!list.length){
+      return `<div class="empty"><div class="big">No games match these filters</div>Adjust or clear the filters to see your record.</div>`;
+    }
+    const sorted = list.slice().sort((a,b)=> (b.date||"").localeCompare(a.date||"") || (b._i-a._i));
+    return `<div class="ledger">${sorted.map(g=>{
+      const r=resultOf(g);
+      const rLabel = r==="win"?"Win":r==="loss"?"Loss":"Draw";
+      const youN = g.youName?` <span style="color:var(--bone-dim)">(${esc(g.youName)})</span>`:"";
+      const oppN = g.oppName?` <span style="color:var(--bone-dim)">(${esc(g.oppName)})</span>`:"";
+      const detLine = (g.youDetachment||g.oppDetachment)
+        ? `<div class="dets">${esc(g.youDetachment||"—")}<span class="v">vs</span>${esc(g.oppDetachment||"—")}</div>` : "";
+      return `
+        <div class="entry">
+          <div class="badge ${r}">${rLabel}</div>
+          <div class="matchup">
+            <div class="factions">${esc(g.youFaction)}${youN}<span class="v">vs</span>${esc(g.oppFaction)}${oppN}</div>
+            ${detLine}
+            <div class="meta">${fmtDate(g.date)}${g.location?`<span class="loc">${esc(g.location)}</span>`:""}</div>
+          </div>
+          <div class="right">
+            <div class="score"><span class="mine">${g.youScore}</span><span class="sep">–</span>${g.oppScore}</div>
+            <button class="del" data-id="${g.id}" title="Delete this game" aria-label="Delete game">✕</button>
+          </div>
+        </div>`;
+    }).join("")}</div>`;
+  }
+
+  // ---- events ----
+  function wire(){
+    const logBtn = document.getElementById("btn-log");
+    if(logBtn) logBtn.addEventListener("click", addGame);
+
+    const fy=document.getElementById("flt-you"); if(fy) fy.addEventListener("change",e=>{filters.you=e.target.value;render();});
+    const fo=document.getElementById("flt-opp"); if(fo) fo.addEventListener("change",e=>{filters.opp=e.target.value;render();});
+    const fr=document.getElementById("flt-res"); if(fr) fr.addEventListener("change",e=>{filters.result=e.target.value;render();});
+    const cf=document.getElementById("clear-filters"); if(cf) cf.addEventListener("click",()=>{filters={you:"all",opp:"all",result:"all"};render();});
+
+    document.querySelectorAll(".honours tr.clickable").forEach(tr=>{
+      tr.addEventListener("click",()=>{
+        const f=tr.getAttribute("data-faction");
+        filters.you = (filters.you===f)?"all":f;
+        render();
+      });
+    });
+    document.querySelectorAll(".del").forEach(b=>{
+      b.addEventListener("click",()=>delGame(b.getAttribute("data-id")));
+    });
+
+    // faction -> detachment dependent dropdowns (no full re-render)
+    const yf=document.getElementById("f-youF"), yd=document.getElementById("f-youDet");
+    if(yf&&yd) yf.addEventListener("change",()=>{ yd.innerHTML=detachmentOptions(yf.value,""); });
+    const of=document.getElementById("f-oppF"), od=document.getElementById("f-oppDet");
+    if(of&&od) of.addEventListener("change",()=>{ od.innerHTML=detachmentOptions(of.value,""); });
+
+    // Battle Honours mode toggle
+    document.querySelectorAll(".tg").forEach(b=>{
+      b.addEventListener("click",()=>{ honoursMode=b.getAttribute("data-mode"); render(); });
+    });
+
+    // submit on Enter from score fields
+    ["f-youS","f-oppS"].forEach(id=>{
+      const el=document.getElementById(id);
+      if(el) el.addEventListener("keydown",e=>{ if(e.key==="Enter") addGame(); });
+    });
+  }
+
+  function val(id){ const el=document.getElementById(id); return el?el.value.trim():""; }
+
+  async function addGame(){
+    const err=document.getElementById("form-err");
+    const youF=val("f-youF"), oppF=val("f-oppF");
+    const youS=val("f-youS"), oppS=val("f-oppS");
+    if(!youF || !oppF){ err.textContent="Enter both factions to log the game."; return; }
+    if(youS===""||oppS===""){ err.textContent="Enter both final scores."; return; }
+    const ys=Number(youS), os=Number(oppS);
+    if(isNaN(ys)||isNaN(os)){ err.textContent="Scores must be numbers."; return; }
+    err.textContent="";
+
+    const g={
+      id:uid(),
+      date:val("f-date")||today(),
+      youFaction:youF, youName:val("f-youN"), youDetachment:val("f-youDet"),
+      oppFaction:oppF, oppName:val("f-oppN"), oppDetachment:val("f-oppDet"),
+      location:val("f-loc"),
+      youScore:ys, oppScore:os
+    };
+    games.push(g);
+    profile={ name:g.youName, faction:g.youFaction, detachment:g.youDetachment };
+    await save(KEY, JSON.stringify(games));
+    await save(PKEY, JSON.stringify(profile));
+    render();
+  }
+
+  async function delGame(id){
+    if(!window.confirm("Remove this game from the ledger?")) return;
+    games=games.filter(g=>g.id!==id);
+    await save(KEY, JSON.stringify(games));
+    render();
+  }
+
+  // ---- boot ----
+  (async function init(){
+    try{
+      const raw=await load(KEY);
+      if(raw){ games=JSON.parse(raw)||[]; }
+    }catch(e){ games=[]; }
+    games.forEach((g,i)=>g._i=i); // stable secondary sort key
+    try{
+      const p=await load(PKEY);
+      if(p){ profile=JSON.parse(p)||profile; }
+    }catch(e){}
+    render();
+  })();
+
+})();
+</script>
+</body>
+</html>
