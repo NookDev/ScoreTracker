@@ -4,3 +4,7 @@ deployment:
     - export DEPLOYPATH=/home/scoret/public_html/
     - /bin/cp index.html $DEPLOYPATH
     - /bin/cp armageddon-bg.jpg $DEPLOYPATH
+    - /bin/cp manifest.json $DEPLOYPATH
+    - /bin/cp 180.png $DEPLOYPATH
+    - /bin/cp 192.png $DEPLOYPATH
+    - /bin/cp 512.png $DEPLOYPATH
