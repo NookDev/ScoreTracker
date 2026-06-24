@@ -11,6 +11,7 @@
 <meta name="apple-mobile-web-app-title" content="Campaign Ledger">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Oswald:wght@400;500;600&family=Barlow:wght@400;500;600&display=swap" as="style">
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Oswald:wght@400;500;600&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root{
@@ -95,6 +96,8 @@
     border-radius:3px;
     display:grid;
     grid-template-columns:1.15fr 1fr;
+    position:relative;
+    animation:sealIn .45s ease both;
   }
   @media(max-width:640px){.seal{grid-template-columns:1fr}}
   .seal-rate{
@@ -192,8 +195,20 @@
   input:focus,select:focus{outline:2px solid var(--brass);outline-offset:0;border-color:var(--brass)}
   select option{background:var(--ink-2);color:var(--bone)}
   select optgroup{background:var(--ink-2);color:var(--brass);font-family:"Oswald",sans-serif;font-style:normal}
-  .vs-split{display:grid;grid-template-columns:1fr 1fr;gap:14px 16px;grid-column:1/-1}
+  .vs-split{display:grid;grid-template-columns:1fr auto 1fr;gap:14px 0;grid-column:1/-1}
   @media(max-width:640px){.vs-split{grid-template-columns:1fr}}
+  .vs-divider{display:flex;align-items:center;justify-content:center;padding:0 12px}
+  .vs-divider span{
+    font-family:"Cinzel",serif;font-weight:700;font-size:11px;
+    color:var(--brass);letter-spacing:.24em;
+    writing-mode:vertical-rl;
+    border-left:1px solid rgba(200,168,75,.3);
+    border-right:1px solid rgba(200,168,75,.3);
+    padding:14px 6px;
+    text-shadow:0 0 18px rgba(200,168,75,.5);
+    opacity:.85;
+  }
+  @media(max-width:640px){.vs-divider{display:none}}
   .side{
     border:1px solid var(--line);border-radius:3px;padding:14px;
     background:var(--panel-2);
@@ -246,15 +261,19 @@
   .ledger{display:flex;flex-direction:column;gap:0}
   .entry{
     display:grid;grid-template-columns:64px 1fr auto;gap:14px;align-items:center;
-    padding:14px 4px;border-bottom:1px solid rgba(46,46,46,.8);
+    padding:14px 4px 14px 11px;border-bottom:1px solid rgba(46,46,46,.8);
+    border-left:3px solid transparent;
+    transition:background .2s,border-color .2s;
+    animation:fadeSlideIn .3s ease both;
   }
+  .entry:hover{background:rgba(200,168,75,.04)}
   .entry .badge{
     font-family:"Oswald";text-transform:uppercase;letter-spacing:.12em;font-size:11px;
     text-align:center;padding:7px 0;border-radius:2px;border:1px solid;font-weight:600;
   }
-  .badge.win{color:var(--olive);border-color:rgba(76,175,125,.5);background:rgba(76,175,125,.1)}
-  .badge.loss{color:var(--oxide);border-color:rgba(224,82,82,.5);background:rgba(224,82,82,.1)}
-  .badge.draw{color:var(--steel);border-color:rgba(136,136,136,.5);background:rgba(136,136,136,.1)}
+  .badge.win{color:var(--olive);border-color:rgba(76,175,125,.5);background:rgba(76,175,125,.1);box-shadow:inset 0 0 10px rgba(76,175,125,.2),0 0 6px rgba(76,175,125,.1)}
+  .badge.loss{color:var(--oxide);border-color:rgba(224,82,82,.5);background:rgba(224,82,82,.1);box-shadow:inset 0 0 10px rgba(224,82,82,.2),0 0 6px rgba(224,82,82,.1)}
+  .badge.draw{color:var(--steel);border-color:rgba(136,136,136,.5);background:rgba(136,136,136,.1);box-shadow:inset 0 0 10px rgba(136,136,136,.15)}
   .entry .matchup{min-width:0}
   .entry .factions{font-family:"Cinzel";font-size:15px;color:var(--bone);font-weight:500}
   .entry .factions .v{color:var(--bone-dim);font-family:"Oswald";font-size:12px;margin:0 8px;letter-spacing:.1em}
@@ -293,6 +312,46 @@
 
   .footnote{margin-top:42px;text-align:center;font-size:12px;color:#555;font-family:"Oswald";letter-spacing:.1em;text-transform:uppercase}
   .loading{text-align:center;padding:60px;color:var(--bone-dim);font-family:"Oswald";letter-spacing:.2em;text-transform:uppercase}
+
+  /* ---------- Noise overlay ---------- */
+  body::after{
+    content:"";position:fixed;inset:0;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/feTurbulence%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E");
+    opacity:.04;pointer-events:none;z-index:9999;mix-blend-mode:overlay;
+  }
+
+  /* ---------- Keyframes ---------- */
+  @keyframes fadeSlideIn{
+    from{opacity:0;transform:translateY(8px)}
+    to{opacity:1;transform:translateY(0)}
+  }
+  @keyframes sealIn{
+    from{opacity:0;transform:scale(.97)}
+    to{opacity:1;transform:scale(1)}
+  }
+
+  /* ---------- Entry stagger ---------- */
+  .entry:nth-child(1){animation-delay:.04s}
+  .entry:nth-child(2){animation-delay:.08s}
+  .entry:nth-child(3){animation-delay:.12s}
+  .entry:nth-child(4){animation-delay:.16s}
+  .entry:nth-child(5){animation-delay:.20s}
+  .entry:nth-child(6){animation-delay:.24s}
+  .entry:nth-child(7){animation-delay:.28s}
+  .entry:nth-child(8){animation-delay:.32s}
+  .entry:nth-child(9){animation-delay:.36s}
+  .entry:nth-child(10){animation-delay:.40s}
+
+  /* ---------- Seal corner ornaments ---------- */
+  .seal-corners{position:absolute;inset:-1px;pointer-events:none;z-index:2}
+  .seal-corners .c{
+    position:absolute;width:16px;height:16px;
+    border-color:var(--brass-bright);border-style:solid;opacity:.7;
+  }
+  .seal-corners .tl{top:0;left:0;border-width:2px 0 0 2px}
+  .seal-corners .tr{top:0;right:0;border-width:2px 2px 0 0}
+  .seal-corners .bl{bottom:0;left:0;border-width:0 0 2px 2px}
+  .seal-corners .br{bottom:0;right:0;border-width:0 2px 2px 0}
 </style>
 </head>
 <body>
@@ -338,6 +397,13 @@
   const FACTION_GROUPS=[{"g": "Space Marines", "f": ["Space Marines", "Dark Angels", "Blood Angels", "Space Wolves", "Black Templars", "Deathwatch"]}, {"g": "Imperium", "f": ["Grey Knights", "Adepta Sororitas", "Adeptus Custodes", "Adeptus Mechanicus", "Astra Militarum", "Imperial Knights", "Imperial Agents"]}, {"g": "Chaos", "f": ["Chaos Space Marines", "Death Guard", "Thousand Sons", "World Eaters", "Emperor’s Children", "Chaos Daemons", "Chaos Knights"]}, {"g": "Xenos", "f": ["Aeldari", "Drukhari", "Necrons", "Orks", "T’au Empire", "Tyranids", "Genestealer Cults", "Leagues of Votann"]}];
   const DETACHMENTS={"Space Marines": ["1st Company Task Force", "Anvil Siege Force", "Armoured Speartip", "Bastion Task Force", "Blade of Ultramar", "Ceramite Sentinels", "Emperor’s Shield", "Firestorm Assault Force", "Forgefather’s Seekers", "Fulguris Task Force", "Gladius Task Force", "Hammer of Avernii", "Headhunter Task Force", "Ironstorm Spearhead", "Librarius Conclave", "Orbital Assault Force", "Reclamation Force", "Shadowmark Talon", "Spearpoint Task Force", "Stormlance Task Force", "Subversion Assets", "Vanguard Spearhead"], "Dark Angels": ["1st Company Task Force", "Anvil Siege Force", "Armoured Speartip", "Bastion Task Force", "Ceramite Sentinels", "Company of Hunters", "Dark Age Arsenal", "Darkflight Pursuit", "Firestorm Assault Force", "Fulguris Task Force", "Gladius Task Force", "Headhunter Task Force", "Inner Circle Task Force", "Interrogation Conclave", "Ironstorm Spearhead", "Librarius Conclave", "Lion’s Blade Task Force", "Orbital Assault Force", "Stormlance Task Force", "Subversion Assets", "Unforgiven Task Force", "Vanguard Spearhead", "Wrath of the Rock"], "Blood Angels": ["1st Company Task Force", "Angelic Inheritors", "Anvil Siege Force", "Armoured Speartip", "Bastion Task Force", "Ceramite Sentinels", "Encarmine Speartip", "Firestorm Assault Force", "Fulguris Task Force", "Gladius Task Force", "Headhunter Task Force", "Ironstorm Spearhead", "Legacy of Grace", "Liberator Assault Group", "Librarius Conclave", "Orbital Assault Force", "Rage-Cursed Onslaught", "Stormlance Task Force", "Subversion Assets", "The Angelic Host", "The Lost Brethren", "Vanguard Spearhead", "Wrath of the Doomed"], "Space Wolves": ["1st Company Task Force", "Anvil Siege Force", "Armoured Speartip", "Bastion Task Force", "Ceramite Sentinels", "Champions of Fenris", "Firestorm Assault Force", "Fulguris Task Force", "Gladius Task Force", "Headhunter Task Force", "Ironstorm Spearhead", "Legends of Saga and Song", "Librarius Conclave", "Orbital Assault Force", "Saga of the Beastslayer", "Saga of the Bold", "Saga of the Great Wolf", "Saga of the Hunter", "Stormlance Task Force", "Subversion Assets", "Vanguard Spearhead", "Veterans of the Fang"], "Black Templars": ["Anvil Siege Force", "Armoured Speartip", "Bastion Task Force", "Ceramite Sentinels", "Companions of Vehemence", "Firestorm Assault Force", "Fulguris Task Force", "Gladius Task Force", "Godhammer Assault Force", "Headhunter Task Force", "Ironstorm Spearhead", "Marshal’s Household", "Orbital Assault Force", "Stormlance Task Force", "Subversion Assets", "The Living Miracle", "Vanguard Spearhead", "Vindication Task Force", "Wrathful Procession"], "Deathwatch": ["1st Company Task Force", "Anvil Siege Force", "Armoured Speartip", "Bastion Task Force", "Black Spear Task Force", "Ceramite Sentinels", "Firestorm Assault Force", "Fulguris Task Force", "Gladius Task Force", "Headhunter Task Force", "Ironstorm Spearhead", "Librarius Conclave", "Orbital Assault Force", "Stormlance Task Force", "Subversion Assets", "Vanguard Spearhead"], "Grey Knights": ["Argent Assault", "Augurium Task Force", "Banishers", "Brotherhood Strike", "Fires of Purgation", "Hallowed Conclave", "Immaterial Interdiction", "Sanctic Spearhead", "Warpbane Task Force"], "Adepta Sororitas": ["Army of Faith", "Bringers of Flame", "Champions of Faith", "Chorus of Condemnation", "Hallowed Martyrs", "Penitent Host", "Sacred Champions", "Sanctified Orators"], "Adeptus Custodes": ["Auric Champions", "Lions of the Emperor", "Might of the Moritoi", "Null Maiden Vigil", "Shield Host", "Silent Hunters", "Solar Spearhead", "Talons of the Emperor", "Tharanatoi Hammerblow"], "Adeptus Mechanicus": ["Cohort Acquisitus", "Cohort Cybernetica", "Data-Psalm Conclave", "Eradication Cohort", "Explorator Maniple", "Haloscreed Battle Clade", "Lords of the Forge", "Luminen Auto-Choir", "Rad-Zone Corps", "Skitarii Hunter Cohort"], "Astra Militarum": ["Abhuman Auxiliaries", "Armoured Infantry", "Bridgehead Strike", "Combined Arms", "Designation Force", "Grizzled Company", "Hammer of the Emperor", "Mechanised Assault", "Recon Element", "Siege Regiment", "Steel Hammer"], "Imperial Knights": ["Dominus Foebreakers", "Freeblade Company", "Gate Warden Lance", "Questor Forgepact", "Questoris Companions", "Spearhead-At-Arms", "Throne-Bonded Outriders", "Valourstrike Lance"], "Imperial Agents": ["Imperialis Fleet", "Ordo Hereticus, Purgation Force", "Ordo Malleus, Daemon Hunters", "Ordo Xenos, Alien Hunters", "Veiled Blade Elimination Force"], "Chaos Space Marines": ["Cabal of Chaos", "Chaos Cult", "Creations of Bile", "Cult of the Arkifane", "Deceptors", "Devotees of Destruction", "Dread Talons", "Fellhammer Siege-Host", "Huron’s Marauders", "Murdertalon Raiders", "Nightmare Hunt", "Pactbound Zealots", "Renegade Raiders", "Renegade Warband", "Soulforged Warpack", "Veterans of the Long War", "Warpstrike Champions"], "Death Guard": ["Champions of Contagion", "Contagion Engines", "Death Lord’s Chosen", "Flyblown Host", "Mortarion’s Hammer", "Paragons of Putrescence", "Shamblerot Vectorium", "Tallyband Summoners", "Virulent Vectorium"], "Thousand Sons": ["Changehost of Deceit", "Grand Coven", "Hexwarp Thrallband", "Ritual of Regeneration", "Rubricae Phalanx", "Sekhetar Cohort", "Servants of Change", "Warpforged Cabal", "Warpmeld Pact"], "World Eaters": ["Berzerker Warband", "Brazen Engines", "Butchers of Khorne", "Cult of Blood", "Goretrack Onslaught", "Khorne Daemonkin", "Possessed Slaughterband", "Vessels of Wrath"], "Emperor’s Children": ["Carnival of Excess", "Coterie of the Conceited", "Court of the Phoenician", "Elegant Brutes", "Frenzied Host", "Mercurial Host", "Peerless Bladesmen", "Rapid Evisceration", "Slaanesh’s Chosen", "Spectacle of Slaughter"], "Chaos Daemons": ["Blood Legion", "Cavalcade of Chaos", "Daemonic Incursion", "Legion of Excess", "Lords of the Warp", "Plague Legion", "Scintillating Legion", "Shadow Legion", "Warptide"], "Chaos Knights": ["Bastions of Tyranny", "Helhunt Lance", "Houndpack Lance", "Hunting Warpack", "Iconoclast Fiefdom", "Infernal Lance", "Lords of Dread", "Traitoris Lance"], "Aeldari": ["Armoured Warhost", "Aspect Host", "Corsair Coterie", "Devoted of Ynnead", "Eldritch Raiders", "Fateful Performance", "Ghosts of the Webway", "Guardian Battlehost", "Path of the Outcast", "Seer Council", "Serpent’s Brood", "Spirit Conclave", "Twilight Flickers", "Warhost", "Windrider Host"], "Drukhari": ["Covenite Coterie", "Exhibition of Slaughter", "Kabalite Agonysts", "Kabalite Cartel", "Realspace Raiders", "Reaper’s Wager", "Skysplinter Assault", "Spectacle of Spite", "Tools of Torment"], "Necrons": ["Annihilation Legion", "Awakened Dynasty", "Canoptek Court", "Cryptek Conclave", "Cursed Legion", "Hand of the Dynasty", "Hypercrypt Legion", "Obeisance Phalanx", "Pantheon of Woe", "Skyshroud Spearhead", "Starshatter Arsenal", "The Phaeron’s Armoury"], "Orks": ["Blitz Brigade", "Bully Boyz", "Da Big Hunt", "Dread Mob", "Freebooter Krew", "Green Tide", "Kult of Speed", "More Dakka!", "Rollin' Deff", "Speedwaaagh!", "Taktikal Brigade", "War Horde"], "T’au Empire": ["Advanced Acquisition Cadre", "Auxiliary Cadre", "Experimental Prototype Cadre", "Kauyon", "Kroot Hunting Pack", "Mont’Ka", "Retaliation Cadre"], "Tyranids": ["Ambush Predators", "Assimilation Swarm", "Crusher Stampede", "Invasion Fleet", "Subterranean Assault", "Synaptic Nexus", "Talons of the Norn Queen", "Unending Swarm", "Vanguard Onslaught", "Warrior Bioform Onslaught"], "Genestealer Cults": ["Biosanctic Broodsurge", "Brood Brothers Auxilia", "Final Day", "Heroes of the Uprising", "Host of Ascension", "Outlander Claw", "Purestrain Broodswarm", "Xenocreed Congregation", "Xenocult Masses"], "Leagues of Votann": ["Armoured Trailblazers", "Brandfast Oathband", "Dêlve Assault Shift", "Farseekers", "Hearthband", "Hearthfyre Arsenal", "Hearthguard Covenant", "Mercenary Oathband", "Needgaârd Oathband", "Persecution Prospect"]};
   // === BSDATA:END ===
+  const ALLEGIANCE_COLORS={"Space Marines":"#c8a84b","Imperium":"#7799cc","Chaos":"#cc3535","Xenos":"#4caf7d"};
+  function allegianceColor(faction){
+    for(const grp of FACTION_GROUPS){
+      if(grp.f.includes(faction)) return ALLEGIANCE_COLORS[grp.g]||"#555";
+    }
+    return "#555";
+  }
   function factionOptions(sel){
     let h=`<option value="" ${sel?"":"selected"} disabled>Select faction…</option>`;
     FACTION_GROUPS.forEach(grp=>{
@@ -416,8 +482,9 @@
 
     app.innerHTML = `
       <div class="seal">
+        <div class="seal-corners"><span class="c tl"></span><span class="c tr"></span><span class="c bl"></span><span class="c br"></span></div>
         <div class="seal-rate">
-          <div class="pct">${s.rate}<span style="font-size:.5em">%</span></div>
+          <div class="pct"><span class="pct-num" data-target="${s.rate}">0</span><span style="font-size:.5em">%</span></div>
           <div class="lbl">Win Rate</div>
           <div class="rec">${s.w}<span> W</span> · ${s.l}<span> L</span> · ${s.d}<span> D</span></div>
         </div>
@@ -461,6 +528,7 @@
                   </div>
                 </div>
               </div>
+              <div class="vs-divider"><span>VS</span></div>
               <div class="side foe">
                 <p class="tag">Opponent</p>
                 <div class="row2">
@@ -591,7 +659,7 @@
       const detLine = (g.youDetachment||g.oppDetachment)
         ? `<div class="dets">${esc(g.youDetachment||"—")}<span class="v">vs</span>${esc(g.oppDetachment||"—")}</div>` : "";
       return `
-        <div class="entry">
+        <div class="entry" style="border-left-color:${allegianceColor(g.youFaction)}">
           <div class="badge ${r}">${rLabel}</div>
           <div class="matchup">
             <div class="factions">${esc(g.youFaction)}${youN}<span class="v">vs</span>${esc(g.oppFaction)}${oppN}</div>
@@ -611,6 +679,20 @@
 
   // ---- events ----
   function wire(){
+    // animate win-rate counter
+    const pctNum=document.querySelector(".pct-num");
+    if(pctNum){
+      const target=parseInt(pctNum.getAttribute("data-target"))||0;
+      let start=null;
+      (function count(ts){
+        if(!start) start=ts;
+        const p=Math.min((ts-start)/550,1);
+        const ease=1-Math.pow(1-p,3);
+        pctNum.textContent=Math.round(ease*target);
+        if(p<1) requestAnimationFrame(count);
+      })(performance.now());
+    }
+
     const logBtn = document.getElementById("btn-log");
     if(logBtn) logBtn.addEventListener("click", addGame);
 
