@@ -244,6 +244,11 @@
   }
   .btn-ghost:hover{color:var(--bone);border-color:var(--bone-dim)}
   .err{color:var(--oxide);font-size:13px;font-family:"Barlow";min-height:0}
+  .subscore-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+  .subscore-grid .field{gap:4px}
+  .subscores{font-family:"Oswald",sans-serif;font-size:12px;color:var(--bone-dim);margin-top:3px;letter-spacing:.04em}
+  .subscores .sv{color:var(--line);margin:0 6px}
+  .score-total-label{font-family:"Oswald",sans-serif;text-transform:uppercase;letter-spacing:.12em;font-size:11px;color:var(--bone-dim);margin-bottom:4px;display:block}
 
   /* ---------- Filters ---------- */
   .filters{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end}
@@ -593,7 +598,17 @@
                   </div>
                   <div class="field">
                     <label>Your Score</label>
-                    <input id="f-youS" type="number" inputmode="numeric" min="0" placeholder="0" value="${eg!=null?eg.youScore:""}">
+                    <input id="f-youS" type="number" inputmode="numeric" min="0" placeholder="Total" value="${eg!=null?eg.youScore:""}">
+                    <div class="subscore-grid">
+                      <div class="field">
+                        <label>Primary <span class="opt">optional</span></label>
+                        <input id="f-youPri" type="number" inputmode="numeric" min="0" placeholder="0" value="${eg!=null&&eg.youPrimary!=null?eg.youPrimary:''}">
+                      </div>
+                      <div class="field">
+                        <label>Secondary <span class="opt">optional</span></label>
+                        <input id="f-youSec" type="number" inputmode="numeric" min="0" placeholder="0" value="${eg!=null&&eg.youSecondary!=null?eg.youSecondary:''}">
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -612,7 +627,17 @@
                   </div>
                   <div class="field">
                     <label>Their Score</label>
-                    <input id="f-oppS" type="number" inputmode="numeric" min="0" placeholder="0" value="${eg!=null?eg.oppScore:""}">
+                    <input id="f-oppS" type="number" inputmode="numeric" min="0" placeholder="Total" value="${eg!=null?eg.oppScore:""}">
+                    <div class="subscore-grid">
+                      <div class="field">
+                        <label>Primary <span class="opt">optional</span></label>
+                        <input id="f-oppPri" type="number" inputmode="numeric" min="0" placeholder="0" value="${eg!=null&&eg.oppPrimary!=null?eg.oppPrimary:''}">
+                      </div>
+                      <div class="field">
+                        <label>Secondary <span class="opt">optional</span></label>
+                        <input id="f-oppSec" type="number" inputmode="numeric" min="0" placeholder="0" value="${eg!=null&&eg.oppSecondary!=null?eg.oppSecondary:''}">
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -745,12 +770,15 @@
       const oppDets=g.oppDetachments?.length?g.oppDetachments:(g.oppDetachment?[g.oppDetachment]:[]);
       const detLine=(youDets.length||oppDets.length)
         ?`<div class="dets">${esc(youDets.join(" / ")||"—")}<span class="v">vs</span>${esc(oppDets.join(" / ")||"—")}</div>`:"";
+      const hasSubscores=g.youPrimary!=null||g.youSecondary!=null||g.oppPrimary!=null||g.oppSecondary!=null;
+      const subLine=hasSubscores?`<div class="subscores">P\u202f${g.youPrimary??'—'}\u2002S\u202f${g.youSecondary??'—'}<span class="sv">vs</span>P\u202f${g.oppPrimary??'—'}\u2002S\u202f${g.oppSecondary??'—'}</div>`:"";
       return `
         <div class="entry" style="border-left-color:${allegianceColor(g.youFaction)}">
           <div class="badge ${r}">${rLabel}</div>
           <div class="matchup">
             <div class="factions">${esc(g.youFaction)}${youN}<span class="v">vs</span>${esc(g.oppFaction)}${oppN}</div>
             ${detLine}
+            ${subLine}
             <div class="meta">${fmtDate(g.date)}${g.location?`<span class="loc">${esc(g.location)}</span>`:""}</div>
           </div>
           <div class="right">
@@ -859,6 +887,17 @@
       location.reload();
     });
 
+    // auto-calc total from primary + secondary
+    function wireAutoCalc(priId, secId, totId){
+      const pri=document.getElementById(priId), sec=document.getElementById(secId), tot=document.getElementById(totId);
+      if(!pri||!sec||!tot) return;
+      function update(){ if(pri.value!==""||sec.value!=="") tot.value=(Number(pri.value)||0)+(Number(sec.value)||0); }
+      pri.addEventListener("input",update);
+      sec.addEventListener("input",update);
+    }
+    wireAutoCalc("f-youPri","f-youSec","f-youS");
+    wireAutoCalc("f-oppPri","f-oppSec","f-oppS");
+
     // submit on Enter from score fields
     ["f-youS","f-oppS"].forEach(id=>{
       const el=document.getElementById(id);
@@ -882,6 +921,9 @@
     const youFirst=firstEl?firstEl.checked:null;
     const youDetachments=[0,1,2].map(i=>val(`f-youDet-${i}`)).filter(Boolean);
     const oppDetachments=[0,1,2].map(i=>val(`f-oppDet-${i}`)).filter(Boolean);
+    const numOrNull=id=>{ const v=val(id); return v===""?null:Number(v); };
+    const youPrimary=numOrNull("f-youPri"), youSecondary=numOrNull("f-youSec");
+    const oppPrimary=numOrNull("f-oppPri"), oppSecondary=numOrNull("f-oppSec");
     if(editingId){
       const idx=games.findIndex(g=>g.id===editingId);
       if(idx!==-1){
@@ -889,7 +931,8 @@
           date:val("f-date")||today(),
           youFaction:youF, youName:val("f-youN"), youDetachments,
           oppFaction:oppF, oppName:val("f-oppN"), oppDetachments,
-          location:val("f-loc"), youScore:ys, oppScore:os, youFirst
+          location:val("f-loc"), youScore:ys, oppScore:os, youFirst,
+          youPrimary, youSecondary, oppPrimary, oppSecondary
         };
       }
       editingId=null; youDetCount=1; oppDetCount=1;
@@ -903,7 +946,8 @@
       youFaction:youF, youName:val("f-youN"), youDetachments,
       oppFaction:oppF, oppName:val("f-oppN"), oppDetachments,
       location:val("f-loc"),
-      youScore:ys, oppScore:os, youFirst
+      youScore:ys, oppScore:os, youFirst,
+      youPrimary, youSecondary, oppPrimary, oppSecondary
     };
     games.push(g);
     youDetCount=1; oppDetCount=1;
