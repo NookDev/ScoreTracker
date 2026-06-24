@@ -249,6 +249,10 @@
     background:none;border:none;color:#555;font-size:18px;line-height:1;padding:6px;cursor:pointer;
   }
   .del:hover{color:var(--oxide)}
+  .edit-btn{
+    background:none;border:none;color:var(--brass);font-size:16px;line-height:1;padding:6px;cursor:pointer;opacity:.55;
+  }
+  .edit-btn:hover{opacity:1}
   .entry .dets{font-family:"Oswald",sans-serif;font-size:12px;letter-spacing:.04em;color:var(--brass);opacity:.9;margin-top:3px}
   .entry .dets .v{color:var(--bone-dim);margin:0 7px;font-size:11px}
   .toggle{display:inline-flex;border:1px solid var(--line);border-radius:2px;overflow:hidden}
@@ -301,6 +305,7 @@
   let profile = { name:"", faction:"", detachment:"" };
   let honoursMode = "faction";
   let filters = { you:"all", opp:"all", result:"all" };
+  let editingId = null;
 
   const app = document.getElementById("app");
 
@@ -372,6 +377,7 @@
   function render(){
     const filtered = applyFilters(games);
     const s = tally(filtered);
+    const eg = editingId ? games.find(g=>g.id===editingId) : null;
     const youOpts = factionsForFilter("you");
     const oppOpts = factionsForFilter("opp");
     const filterActive = filters.you!=="all"||filters.opp!=="all"||filters.result!=="all";
@@ -392,7 +398,7 @@
       <div class="total-line"><b>${s.t}</b> game${s.t===1?"":"s"} ${filterActive?"in current view":"on record"}</div>
 
       <section class="sec">
-        <div class="sec-head"><h2>Log an Engagement</h2></div>
+        <div class="sec-head"><h2>${eg?"Edit Engagement":"Log an Engagement"}</h2></div>
         <div class="form">
           <div class="grid">
             <div class="vs-split">
@@ -401,19 +407,19 @@
                 <div class="row2">
                   <div class="field">
                     <label>Faction</label>
-                    <select id="f-youF">${factionOptions(profile.faction)}</select>
+                    <select id="f-youF">${factionOptions(eg?eg.youFaction:profile.faction)}</select>
                   </div>
                   <div class="field">
                     <label>Detachment <span class="opt">optional</span></label>
-                    <select id="f-youDet">${detachmentOptions(profile.faction, profile.detachment)}</select>
+                    <select id="f-youDet">${detachmentOptions(eg?eg.youFaction:profile.faction, eg?eg.youDetachment:profile.detachment)}</select>
                   </div>
                   <div class="field">
                     <label>Player <span class="opt">optional</span></label>
-                    <input id="f-youN" placeholder="You" value="${esc(profile.name)}" autocomplete="off">
+                    <input id="f-youN" placeholder="You" value="${esc(eg?eg.youName:profile.name)}" autocomplete="off">
                   </div>
                   <div class="field">
                     <label>Your Score</label>
-                    <input id="f-youS" type="number" inputmode="numeric" min="0" placeholder="0">
+                    <input id="f-youS" type="number" inputmode="numeric" min="0" placeholder="0" value="${eg!=null?eg.youScore:""}">
                   </div>
                 </div>
               </div>
@@ -422,34 +428,35 @@
                 <div class="row2">
                   <div class="field">
                     <label>Faction</label>
-                    <select id="f-oppF">${factionOptions("")}</select>
+                    <select id="f-oppF">${factionOptions(eg?eg.oppFaction:"")}</select>
                   </div>
                   <div class="field">
                     <label>Detachment <span class="opt">optional</span></label>
-                    <select id="f-oppDet">${detachmentOptions("", "")}</select>
+                    <select id="f-oppDet">${detachmentOptions(eg?eg.oppFaction:"", eg?eg.oppDetachment:"")}</select>
                   </div>
                   <div class="field">
                     <label>Player <span class="opt">optional</span></label>
-                    <input id="f-oppN" placeholder="Opponent" autocomplete="off">
+                    <input id="f-oppN" placeholder="Opponent" value="${esc(eg?eg.oppName:"")}" autocomplete="off">
                   </div>
                   <div class="field">
                     <label>Their Score</label>
-                    <input id="f-oppS" type="number" inputmode="numeric" min="0" placeholder="0">
+                    <input id="f-oppS" type="number" inputmode="numeric" min="0" placeholder="0" value="${eg!=null?eg.oppScore:""}">
                   </div>
                 </div>
               </div>
             </div>
             <div class="field">
               <label>Date</label>
-              <input id="f-date" type="date" value="${today()}">
+              <input id="f-date" type="date" value="${eg?eg.date:today()}">
             </div>
             <div class="field">
               <label>Location <span class="opt">optional</span></label>
-              <input id="f-loc" placeholder="e.g. Tabletop Perth" autocomplete="off">
+              <input id="f-loc" placeholder="e.g. Tabletop Perth" value="${esc(eg?eg.location:"")}" autocomplete="off">
             </div>
           </div>
           <div class="actions">
-            <button class="btn-log" id="btn-log">Record Battle</button>
+            <button class="btn-log" id="btn-log">${eg?"Update Battle":"Record Battle"}</button>
+            ${eg?`<button class="btn-ghost" id="btn-cancel-edit">Cancel</button>`:""}
             <span class="err" id="form-err"></span>
           </div>
         </div>
@@ -551,6 +558,7 @@
           </div>
           <div class="right">
             <div class="score"><span class="mine">${g.youScore}</span><span class="sep">–</span>${g.oppScore}</div>
+            <button class="edit-btn" data-id="${g.id}" title="Edit this game" aria-label="Edit game">✎</button>
             <button class="del" data-id="${g.id}" title="Delete this game" aria-label="Delete game">✕</button>
           </div>
         </div>`;
@@ -577,6 +585,15 @@
     document.querySelectorAll(".del").forEach(b=>{
       b.addEventListener("click",()=>delGame(b.getAttribute("data-id")));
     });
+    document.querySelectorAll(".edit-btn").forEach(b=>{
+      b.addEventListener("click",()=>{
+        editingId=b.getAttribute("data-id");
+        render();
+        document.querySelector(".form").scrollIntoView({behavior:"smooth",block:"start"});
+      });
+    });
+    const cancelEdit=document.getElementById("btn-cancel-edit");
+    if(cancelEdit) cancelEdit.addEventListener("click",()=>{ editingId=null; render(); });
 
     // faction -> detachment dependent dropdowns (no full re-render)
     const yf=document.getElementById("f-youF"), yd=document.getElementById("f-youDet");
@@ -608,6 +625,21 @@
     if(isNaN(ys)||isNaN(os)){ err.textContent="Scores must be numbers."; return; }
     err.textContent="";
 
+    if(editingId){
+      const idx=games.findIndex(g=>g.id===editingId);
+      if(idx!==-1){
+        games[idx]={...games[idx],
+          date:val("f-date")||today(),
+          youFaction:youF, youName:val("f-youN"), youDetachment:val("f-youDet"),
+          oppFaction:oppF, oppName:val("f-oppN"), oppDetachment:val("f-oppDet"),
+          location:val("f-loc"), youScore:ys, oppScore:os
+        };
+      }
+      editingId=null;
+      await save(KEY, JSON.stringify(games));
+      render();
+      return;
+    }
     const g={
       id:uid(),
       date:val("f-date")||today(),
