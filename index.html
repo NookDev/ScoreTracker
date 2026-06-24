@@ -699,24 +699,24 @@
         ${renderLedger(filtered)}
       </section>
 
-      ${games.length ? `
       <section class="sec">
         <div class="sec-head"><h2>Sync ID</h2><span class="hint">Use your data on another device</span></div>
+        ${games.length ? `
         <div class="sync-bar">
           <code class="sync-id">${USER_ID}</code>
           <button class="btn-ghost" id="btn-copy-id" style="padding:8px 14px;white-space:nowrap">Copy ID</button>
-        </div>
+        </div>` : ""}
         <div>
-          <button class="sync-link" id="btn-sync-toggle">${syncExpanded?"▲ Cancel":"▾ Use a different ID"}</button>
+          <button class="sync-link" id="btn-sync-toggle">${syncExpanded?"▲ Cancel":"▾ Import from another device"}</button>
           ${syncExpanded ? `
           <div class="sync-input-row">
-            <input id="sync-id-input" placeholder="Paste your Sync ID from another device" autocomplete="off">
+            <input id="sync-id-input" placeholder="Paste your Sync ID here" autocomplete="off">
             <button class="btn-log" id="btn-apply-id" style="padding:10px 18px">Apply</button>
           </div>
           <p class="sync-warn">This will switch to that ledger — your current data here won't be lost, just not visible until you switch back.</p>
           ` : ""}
         </div>
-      </section>` : ""}
+      </section>
     `;
 
     wire();
