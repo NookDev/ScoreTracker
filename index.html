@@ -246,13 +246,15 @@
   .entry .score .mine{color:var(--brass-bright)}
   .entry .score .sep{color:var(--bone-dim);margin:0 4px;font-size:14px}
   .del{
-    background:none;border:none;color:#555;font-size:18px;line-height:1;padding:6px;cursor:pointer;
+    background:none;border:1px solid rgba(224,82,82,.35);color:var(--oxide);font-family:"Oswald",sans-serif;
+    text-transform:uppercase;letter-spacing:.12em;font-size:11px;padding:5px 10px;border-radius:2px;cursor:pointer;
   }
-  .del:hover{color:var(--oxide)}
+  .del:hover{background:rgba(224,82,82,.12);border-color:var(--oxide)}
   .edit-btn{
-    background:none;border:none;color:var(--brass);font-size:16px;line-height:1;padding:6px;cursor:pointer;opacity:.55;
+    background:none;border:1px solid rgba(200,168,75,.35);color:var(--brass);font-family:"Oswald",sans-serif;
+    text-transform:uppercase;letter-spacing:.12em;font-size:11px;padding:5px 10px;border-radius:2px;cursor:pointer;
   }
-  .edit-btn:hover{opacity:1}
+  .edit-btn:hover{background:rgba(200,168,75,.1);border-color:var(--brass)}
   .entry .dets{font-family:"Oswald",sans-serif;font-size:12px;letter-spacing:.04em;color:var(--brass);opacity:.9;margin-top:3px}
   .entry .dets .v{color:var(--bone-dim);margin:0 7px;font-size:11px}
   .toggle{display:inline-flex;border:1px solid var(--line);border-radius:2px;overflow:hidden}
@@ -558,8 +560,8 @@
           </div>
           <div class="right">
             <div class="score"><span class="mine">${g.youScore}</span><span class="sep">–</span>${g.oppScore}</div>
-            <button class="edit-btn" data-id="${g.id}" title="Edit this game" aria-label="Edit game">✎</button>
-            <button class="del" data-id="${g.id}" title="Delete this game" aria-label="Delete game">✕</button>
+            <button class="edit-btn" data-id="${g.id}" aria-label="Edit game">Edit</button>
+            <button class="del" data-id="${g.id}" aria-label="Delete game">Delete</button>
           </div>
         </div>`;
     }).join("")}</div>`;
