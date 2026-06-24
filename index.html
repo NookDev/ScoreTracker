@@ -150,6 +150,14 @@
   .turn-line .tl-label{color:var(--bone-dim)}
   .turn-line .tl-rate{color:var(--brass-bright);font-family:"Cinzel",serif;font-size:13px;font-weight:600}
   .turn-line .tl-rec{color:#555;font-size:10px}
+  .det-controls{display:flex;gap:6px;margin-top:6px}
+  .det-btn{
+    background:none;border:1px solid var(--line);color:var(--bone-dim);
+    font-family:"Oswald",sans-serif;text-transform:uppercase;letter-spacing:.12em;
+    font-size:10px;padding:4px 9px;border-radius:2px;cursor:pointer;flex-shrink:0;
+  }
+  .det-btn:hover{color:var(--bone);border-color:var(--bone-dim)}
+  .det-stacked{margin-top:6px}
   .check-field{
     display:flex;align-items:center;gap:10px;grid-column:1/-1;padding:6px 2px;
   }
@@ -390,6 +398,8 @@
   let honoursMode = "faction";
   let filters = { you:"all", opp:"all", result:"all" };
   let editingId = null;
+  let youDetCount = 1;
+  let oppDetCount = 1;
 
   const app = document.getElementById("app");
 
@@ -416,6 +426,18 @@
     if(!list.length) return `<option value="">— none —</option>`;
     let h=`<option value="">— optional —</option>`;
     h+=list.map(dn=>`<option value="${esc(dn)}" ${sel===dn?"selected":""}>${esc(dn)}</option>`).join("");
+    return h;
+  }
+
+  function renderDetFields(side, faction, dets, count){
+    let h=`<div class="field"><label>Detachment${count>1?"s":""} <span class="opt">optional</span></label>`;
+    for(let i=0;i<count;i++){
+      h+=`<select id="f-${side}Det-${i}"${i>0?' class="det-stacked"':''}>${detachmentOptions(faction,dets[i]||"")}</select>`;
+    }
+    h+=`<div class="det-controls">`;
+    if(count<3) h+=`<button type="button" class="det-btn det-add" data-side="${side}">+ Detachment</button>`;
+    if(count>1) h+=`<button type="button" class="det-btn det-rem" data-side="${side}">− Remove</button>`;
+    h+=`</div></div>`;
     return h;
   }
 
@@ -450,7 +472,7 @@
     });
     const map={};
     base.forEach(g=>{
-      const key = mode==="detachment" ? (g.youDetachment||"(no detachment)") : (g.youFaction||"—");
+      const key = mode==="detachment" ? (g.youDetachments?.[0]||g.youDetachment||"(no detachment)") : (g.youFaction||"—");
       (map[key]=map[key]||[]).push(g);
     });
     return Object.keys(map).map(k=>{
@@ -514,10 +536,7 @@
                     <label>Faction</label>
                     <select id="f-youF">${factionOptions(eg?eg.youFaction:profile.faction)}</select>
                   </div>
-                  <div class="field">
-                    <label>Detachment <span class="opt">optional</span></label>
-                    <select id="f-youDet">${detachmentOptions(eg?eg.youFaction:profile.faction, eg?eg.youDetachment:profile.detachment)}</select>
-                  </div>
+                  ${renderDetFields("you", eg?eg.youFaction:profile.faction, eg?eg.youDetachments||(eg.youDetachment?[eg.youDetachment]:[]):profile.detachments||[profile.detachment].filter(Boolean), youDetCount)}
                   <div class="field">
                     <label>Player <span class="opt">optional</span></label>
                     <input id="f-youN" placeholder="You" value="${esc(eg?eg.youName:profile.name)}" autocomplete="off">
@@ -536,10 +555,7 @@
                     <label>Faction</label>
                     <select id="f-oppF">${factionOptions(eg?eg.oppFaction:"")}</select>
                   </div>
-                  <div class="field">
-                    <label>Detachment <span class="opt">optional</span></label>
-                    <select id="f-oppDet">${detachmentOptions(eg?eg.oppFaction:"", eg?eg.oppDetachment:"")}</select>
-                  </div>
+                  ${renderDetFields("opp", eg?eg.oppFaction:"", eg?eg.oppDetachments||(eg.oppDetachment?[eg.oppDetachment]:[]):[], oppDetCount)}
                   <div class="field">
                     <label>Player <span class="opt">optional</span></label>
                     <input id="f-oppN" placeholder="Opponent" value="${esc(eg?eg.oppName:"")}" autocomplete="off">
@@ -656,8 +672,10 @@
       const rLabel = r==="win"?"Win":r==="loss"?"Loss":"Draw";
       const youN = g.youName?` <span style="color:var(--bone-dim)">(${esc(g.youName)})</span>`:"";
       const oppN = g.oppName?` <span style="color:var(--bone-dim)">(${esc(g.oppName)})</span>`:"";
-      const detLine = (g.youDetachment||g.oppDetachment)
-        ? `<div class="dets">${esc(g.youDetachment||"—")}<span class="v">vs</span>${esc(g.oppDetachment||"—")}</div>` : "";
+      const youDets=g.youDetachments?.length?g.youDetachments:(g.youDetachment?[g.youDetachment]:[]);
+      const oppDets=g.oppDetachments?.length?g.oppDetachments:(g.oppDetachment?[g.oppDetachment]:[]);
+      const detLine=(youDets.length||oppDets.length)
+        ?`<div class="dets">${esc(youDets.join(" / ")||"—")}<span class="v">vs</span>${esc(oppDets.join(" / ")||"—")}</div>`:"";
       return `
         <div class="entry" style="border-left-color:${allegianceColor(g.youFaction)}">
           <div class="badge ${r}">${rLabel}</div>
@@ -714,18 +732,37 @@
     document.querySelectorAll(".edit-btn").forEach(b=>{
       b.addEventListener("click",()=>{
         editingId=b.getAttribute("data-id");
+        const eg=games.find(g=>g.id===editingId);
+        youDetCount=Math.max(1,eg?.youDetachments?.length||1);
+        oppDetCount=Math.max(1,eg?.oppDetachments?.length||1);
         render();
         document.querySelector(".form").scrollIntoView({behavior:"smooth",block:"start"});
       });
     });
     const cancelEdit=document.getElementById("btn-cancel-edit");
-    if(cancelEdit) cancelEdit.addEventListener("click",()=>{ editingId=null; render(); });
+    if(cancelEdit) cancelEdit.addEventListener("click",()=>{ editingId=null; youDetCount=1; oppDetCount=1; render(); });
 
-    // faction -> detachment dependent dropdowns (no full re-render)
-    const yf=document.getElementById("f-youF"), yd=document.getElementById("f-youDet");
-    if(yf&&yd) yf.addEventListener("change",()=>{ yd.innerHTML=detachmentOptions(yf.value,""); });
-    const of=document.getElementById("f-oppF"), od=document.getElementById("f-oppDet");
-    if(of&&od) of.addEventListener("change",()=>{ od.innerHTML=detachmentOptions(of.value,""); });
+    // det add/remove
+    document.querySelectorAll(".det-add").forEach(b=>{
+      b.addEventListener("click",()=>{
+        if(b.getAttribute("data-side")==="you") youDetCount=Math.min(3,youDetCount+1);
+        else oppDetCount=Math.min(3,oppDetCount+1);
+        render();
+      });
+    });
+    document.querySelectorAll(".det-rem").forEach(b=>{
+      b.addEventListener("click",()=>{
+        if(b.getAttribute("data-side")==="you") youDetCount=Math.max(1,youDetCount-1);
+        else oppDetCount=Math.max(1,oppDetCount-1);
+        render();
+      });
+    });
+
+    // faction -> detachment dependent dropdowns (update all slots)
+    const yf=document.getElementById("f-youF");
+    if(yf) yf.addEventListener("change",()=>{[0,1,2].forEach(i=>{const d=document.getElementById(`f-youDet-${i}`);if(d)d.innerHTML=detachmentOptions(yf.value,"");});});
+    const of=document.getElementById("f-oppF");
+    if(of) of.addEventListener("change",()=>{[0,1,2].forEach(i=>{const d=document.getElementById(`f-oppDet-${i}`);if(d)d.innerHTML=detachmentOptions(of.value,"");});});
 
     // Battle Honours mode toggle
     document.querySelectorAll(".tg").forEach(b=>{
@@ -753,17 +790,19 @@
 
     const firstEl=document.getElementById("f-first");
     const youFirst=firstEl?firstEl.checked:null;
+    const youDetachments=[0,1,2].map(i=>val(`f-youDet-${i}`)).filter(Boolean);
+    const oppDetachments=[0,1,2].map(i=>val(`f-oppDet-${i}`)).filter(Boolean);
     if(editingId){
       const idx=games.findIndex(g=>g.id===editingId);
       if(idx!==-1){
         games[idx]={...games[idx],
           date:val("f-date")||today(),
-          youFaction:youF, youName:val("f-youN"), youDetachment:val("f-youDet"),
-          oppFaction:oppF, oppName:val("f-oppN"), oppDetachment:val("f-oppDet"),
+          youFaction:youF, youName:val("f-youN"), youDetachments,
+          oppFaction:oppF, oppName:val("f-oppN"), oppDetachments,
           location:val("f-loc"), youScore:ys, oppScore:os, youFirst
         };
       }
-      editingId=null;
+      editingId=null; youDetCount=1; oppDetCount=1;
       await save(KEY, JSON.stringify(games));
       render();
       return;
@@ -771,13 +810,14 @@
     const g={
       id:uid(),
       date:val("f-date")||today(),
-      youFaction:youF, youName:val("f-youN"), youDetachment:val("f-youDet"),
-      oppFaction:oppF, oppName:val("f-oppN"), oppDetachment:val("f-oppDet"),
+      youFaction:youF, youName:val("f-youN"), youDetachments,
+      oppFaction:oppF, oppName:val("f-oppN"), oppDetachments,
       location:val("f-loc"),
       youScore:ys, oppScore:os, youFirst
     };
     games.push(g);
-    profile={ name:g.youName, faction:g.youFaction, detachment:g.youDetachment };
+    youDetCount=1; oppDetCount=1;
+    profile={ name:g.youName, faction:g.youFaction, detachment:youDetachments[0]||"", detachments:youDetachments };
     await save(KEY, JSON.stringify(games));
     await save(PKEY, JSON.stringify(profile));
     render();
@@ -796,6 +836,12 @@
       const raw=await load(KEY);
       if(raw){ games=JSON.parse(raw)||[]; }
     }catch(e){ games=[]; }
+    // migrate old single-detachment records to arrays
+    games=games.map(g=>({
+      ...g,
+      youDetachments:g.youDetachments||(g.youDetachment?[g.youDetachment]:[]),
+      oppDetachments:g.oppDetachments||(g.oppDetachment?[g.oppDetachment]:[]),
+    }));
     games.forEach((g,i)=>g._i=i); // stable secondary sort key
     try{
       const p=await load(PKEY);
