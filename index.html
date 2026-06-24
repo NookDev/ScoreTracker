@@ -318,6 +318,25 @@
   }
   .empty .big{font-family:"Cinzel";font-size:18px;color:var(--bone);margin-bottom:6px}
 
+  /* ---------- Sync ID ---------- */
+  .sync-bar{
+    display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+    background:var(--panel);border:1px solid var(--line);border-radius:3px;padding:12px 14px;
+  }
+  .sync-id{
+    font-family:"Barlow",monospace;font-size:13px;color:var(--bone-dim);
+    letter-spacing:.05em;flex:1;min-width:0;word-break:break-all;
+  }
+  .sync-link{
+    background:none;border:none;color:var(--bone-dim);font-family:"Oswald",sans-serif;
+    text-transform:uppercase;letter-spacing:.14em;font-size:12px;cursor:pointer;padding:0;
+    margin-top:8px;display:inline-block;
+  }
+  .sync-link:hover{color:var(--bone)}
+  .sync-input-row{display:flex;gap:10px;margin-top:10px;flex-wrap:wrap}
+  .sync-input-row input{flex:1;min-width:200px}
+  .sync-warn{font-size:12px;color:var(--bone-dim);margin:8px 0 0;font-style:italic;opacity:.7}
+
   .footnote{margin-top:42px;text-align:center;font-size:13px;color:var(--bone-dim);font-family:"Oswald";letter-spacing:.1em;text-transform:uppercase}
   .loading{text-align:center;padding:60px;color:var(--bone-dim);font-family:"Oswald";letter-spacing:.2em;text-transform:uppercase}
 
@@ -430,6 +449,7 @@
   let editingId = null;
   let youDetCount = 1;
   let oppDetCount = 1;
+  let syncExpanded = false;
 
   const app = document.getElementById("app");
 
@@ -653,6 +673,25 @@
         <div class="sec-head"><h2>Battle Log</h2><span class="hint">${filtered.length} shown</span></div>
         ${renderLedger(filtered)}
       </section>
+
+      ${games.length ? `
+      <section class="sec">
+        <div class="sec-head"><h2>Sync ID</h2><span class="hint">Use your data on another device</span></div>
+        <div class="sync-bar">
+          <code class="sync-id">${USER_ID}</code>
+          <button class="btn-ghost" id="btn-copy-id" style="padding:8px 14px;white-space:nowrap">Copy ID</button>
+        </div>
+        <div>
+          <button class="sync-link" id="btn-sync-toggle">${syncExpanded?"▲ Cancel":"▾ Use a different ID"}</button>
+          ${syncExpanded ? `
+          <div class="sync-input-row">
+            <input id="sync-id-input" placeholder="Paste your Sync ID from another device" autocomplete="off">
+            <button class="btn-log" id="btn-apply-id" style="padding:10px 18px">Apply</button>
+          </div>
+          <p class="sync-warn">This will switch to that ledger — your current data here won't be lost, just not visible until you switch back.</p>
+          ` : ""}
+        </div>
+      </section>` : ""}
     `;
 
     wire();
@@ -797,6 +836,27 @@
     // Battle Honours mode toggle
     document.querySelectorAll(".tg").forEach(b=>{
       b.addEventListener("click",()=>{ honoursMode=b.getAttribute("data-mode"); render(); });
+    });
+
+    // sync ID
+    const copyBtn=document.getElementById("btn-copy-id");
+    if(copyBtn) copyBtn.addEventListener("click",async()=>{
+      try{ await navigator.clipboard.writeText(USER_ID); }
+      catch(e){ prompt("Copy your Sync ID:", USER_ID); return; }
+      copyBtn.textContent="Copied!";
+      setTimeout(()=>{ copyBtn.textContent="Copy ID"; }, 2000);
+    });
+    const syncToggle=document.getElementById("btn-sync-toggle");
+    if(syncToggle) syncToggle.addEventListener("click",()=>{ syncExpanded=!syncExpanded; render(); });
+    const applyBtn=document.getElementById("btn-apply-id");
+    if(applyBtn) applyBtn.addEventListener("click",()=>{
+      const newId=(document.getElementById("sync-id-input")?.value||"").trim();
+      if(!/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(newId)){
+        alert("That doesn't look like a valid Sync ID — please check and try again.");
+        return;
+      }
+      localStorage.setItem("ledger:uid", newId);
+      location.reload();
     });
 
     // submit on Enter from score fields
