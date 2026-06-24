@@ -411,15 +411,14 @@
   const PKEY = "ledger:profile";
   const API  = "api.php";
 
-  // Each visitor gets a persistent UUID — their private data key
+  // Each visitor gets a persistent short ID — their private data key
   const USER_ID = (()=>{
     const k = "ledger:uid";
     let id = localStorage.getItem(k);
     if(!id){
-      id = "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, c=>{
-        const r = Math.random()*16|0;
-        return (c==="x" ? r : (r&0x3|0x8)).toString(16);
-      });
+      // 5-char ID, no ambiguous chars (0/O, 1/I/L)
+      const chars = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
+      id = Array.from({length:5}, ()=>chars[Math.floor(Math.random()*chars.length)]).join("");
       localStorage.setItem(k, id);
     }
     return id;
@@ -878,9 +877,11 @@
     if(syncToggle) syncToggle.addEventListener("click",()=>{ syncExpanded=!syncExpanded; render(); });
     const applyBtn=document.getElementById("btn-apply-id");
     if(applyBtn) applyBtn.addEventListener("click",()=>{
-      const newId=(document.getElementById("sync-id-input")?.value||"").trim();
-      if(!/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(newId)){
-        alert("That doesn't look like a valid Sync ID — please check and try again.");
+      const newId=(document.getElementById("sync-id-input")?.value||"").trim().toUpperCase();
+      const validShort=/^[A-Z0-9]{5}$/i.test(newId);
+      const validUUID=/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(newId);
+      if(!validShort && !validUUID){
+        alert("That doesn't look like a valid Sync ID — should be 5 characters.");
         return;
       }
       localStorage.setItem("ledger:uid", newId);

@@ -9,9 +9,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit;
 }
 
-// UUID v4 validation — prevents path traversal attacks
+// Accept 5-char alphanumeric short IDs or legacy UUID v4 — prevents path traversal
 $userId = $_SERVER['HTTP_X_USER_ID'] ?? '';
-if (!preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i', $userId)) {
+$validShort = preg_match('/^[A-Z0-9]{5}$/i', $userId);
+$validUUID  = preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i', $userId);
+if (!$validShort && !$validUUID) {
     http_response_code(400);
     echo json_encode(['error' => 'Invalid user ID']);
     exit;
