@@ -138,6 +138,25 @@
     letter-spacing:.24em;font-size:11px;color:var(--bone-dim);margin:14px 0 0;
   }
   .total-line b{color:var(--brass)}
+  .turn-line{
+    display:flex;justify-content:center;gap:28px;flex-wrap:wrap;
+    font-family:"Oswald",sans-serif;text-transform:uppercase;letter-spacing:.16em;
+    font-size:11px;color:var(--bone-dim);margin:8px 0 0;
+  }
+  .turn-line .tl-item{display:flex;gap:7px;align-items:baseline}
+  .turn-line .tl-label{color:var(--bone-dim)}
+  .turn-line .tl-rate{color:var(--brass-bright);font-family:"Cinzel",serif;font-size:13px;font-weight:600}
+  .turn-line .tl-rec{color:#555;font-size:10px}
+  .check-field{
+    display:flex;align-items:center;gap:10px;grid-column:1/-1;padding:6px 2px;
+  }
+  .check-field input[type=checkbox]{
+    width:17px;height:17px;accent-color:var(--brass);cursor:pointer;flex-shrink:0;
+  }
+  .check-field label{
+    font-family:"Oswald",sans-serif;text-transform:uppercase;letter-spacing:.16em;
+    font-size:11px;color:var(--bone-dim);cursor:pointer;margin:0;
+  }
 
   /* ---------- Section headers ---------- */
   .sec{margin-top:36px}
@@ -379,10 +398,17 @@
     return Array.from(set).sort();
   }
 
+  function turnTally(list){
+    const first=list.filter(g=>g.youFirst===true);
+    const second=list.filter(g=>g.youFirst===false);
+    return { first:tally(first), second:tally(second) };
+  }
+
   // ---- render ----
   function render(){
     const filtered = applyFilters(games);
     const s = tally(filtered);
+    const ts = turnTally(filtered);
     const eg = editingId ? games.find(g=>g.id===editingId) : null;
     const youOpts = factionsForFilter("you");
     const oppOpts = factionsForFilter("opp");
@@ -402,6 +428,12 @@
         </div>
       </div>
       <div class="total-line"><b>${s.t}</b> game${s.t===1?"":"s"} ${filterActive?"in current view":"on record"}</div>
+      ${(ts.first.t||ts.second.t)?`
+      <div class="turn-line">
+        <div class="tl-item"><span class="tl-label">1st Turn</span><span class="tl-rate">${ts.first.t?ts.first.rate+"%":"—"}</span><span class="tl-rec">${ts.first.t?ts.first.w+"W·"+ts.first.l+"L·"+ts.first.d+"D":""}</span></div>
+        <div class="tl-item"><span class="tl-label">2nd Turn</span><span class="tl-rate">${ts.second.t?ts.second.rate+"%":"—"}</span><span class="tl-rec">${ts.second.t?ts.second.w+"W·"+ts.second.l+"L·"+ts.second.d+"D":""}</span></div>
+      </div>`:""}
+
 
       <section class="sec">
         <div class="sec-head"><h2>${eg?"Edit Engagement":"Log an Engagement"}</h2></div>
@@ -458,6 +490,10 @@
             <div class="field">
               <label>Location <span class="opt">optional</span></label>
               <input id="f-loc" placeholder="e.g. Tabletop Perth" value="${esc(eg?eg.location:"")}" autocomplete="off">
+            </div>
+            <div class="check-field">
+              <input type="checkbox" id="f-first" ${eg&&eg.youFirst===true?"checked":""}>
+              <label for="f-first">I went first</label>
             </div>
           </div>
           <div class="actions">
@@ -633,6 +669,8 @@
     if(isNaN(ys)||isNaN(os)){ err.textContent="Scores must be numbers."; return; }
     err.textContent="";
 
+    const firstEl=document.getElementById("f-first");
+    const youFirst=firstEl?firstEl.checked:null;
     if(editingId){
       const idx=games.findIndex(g=>g.id===editingId);
       if(idx!==-1){
@@ -640,7 +678,7 @@
           date:val("f-date")||today(),
           youFaction:youF, youName:val("f-youN"), youDetachment:val("f-youDet"),
           oppFaction:oppF, oppName:val("f-oppN"), oppDetachment:val("f-oppDet"),
-          location:val("f-loc"), youScore:ys, oppScore:os
+          location:val("f-loc"), youScore:ys, oppScore:os, youFirst
         };
       }
       editingId=null;
@@ -654,7 +692,7 @@
       youFaction:youF, youName:val("f-youN"), youDetachment:val("f-youDet"),
       oppFaction:oppF, oppName:val("f-oppN"), oppDetachment:val("f-oppDet"),
       location:val("f-loc"),
-      youScore:ys, oppScore:os
+      youScore:ys, oppScore:os, youFirst
     };
     games.push(g);
     profile={ name:g.youName, faction:g.youFaction, detachment:g.youDetachment };
