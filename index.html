@@ -382,14 +382,44 @@
 (function(){
   "use strict";
 
-  // ---- storage abstraction (localStorage for static hosting) ----
-  const KEY = "ledger:games";
+  // ---- storage ----
+  const KEY  = "ledger:games";
   const PKEY = "ledger:profile";
-  function load(k){
-    try{ return localStorage.getItem(k); }catch(e){ return null; }
+  const API  = "api.php";
+
+  // Each visitor gets a persistent UUID — their private data key
+  const USER_ID = (()=>{
+    const k = "ledger:uid";
+    let id = localStorage.getItem(k);
+    if(!id){
+      id = "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, c=>{
+        const r = Math.random()*16|0;
+        return (c==="x" ? r : (r&0x3|0x8)).toString(16);
+      });
+      localStorage.setItem(k, id);
+    }
+    return id;
+  })();
+
+  async function load(k){
+    try{
+      const r = await fetch(`${API}?key=${encodeURIComponent(k)}`, {
+        headers:{"X-User-ID": USER_ID}
+      });
+      if(!r.ok) return null;
+      const d = await r.json();
+      return d.value ?? null;
+    }catch(e){ return null; }
   }
-  function save(k,v){
-    try{ localStorage.setItem(k,v); }catch(e){}
+
+  async function save(k, v){
+    try{
+      await fetch(API, {
+        method:"POST",
+        headers:{"Content-Type":"application/json","X-User-ID": USER_ID},
+        body: JSON.stringify({key:k, value:v})
+      });
+    }catch(e){}
   }
 
   // ---- state ----
@@ -832,6 +862,14 @@
 
   // ---- boot ----
   (async function init(){
+    // One-time migration: move any existing localStorage data to the server
+    for(const k of [KEY, PKEY]){
+      const legacy = localStorage.getItem(k);
+      if(legacy){
+        await save(k, legacy);
+        localStorage.removeItem(k);
+      }
+    }
     try{
       const raw=await load(KEY);
       if(raw){ games=JSON.parse(raw)||[]; }

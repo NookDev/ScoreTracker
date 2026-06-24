@@ -8,3 +8,4 @@ deployment:
     - /bin/cp 180.png $DEPLOYPATH
     - /bin/cp 192.png $DEPLOYPATH
     - /bin/cp 512.png $DEPLOYPATH
+    - /bin/cp api.php $DEPLOYPATH
