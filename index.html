@@ -400,6 +400,7 @@
   </div>
 
   <p class="footnote">Win rate = victories ÷ games played · Data saved to this ledger automatically</p>
+  <div id="visitor-footer"></div>
 </div>
 
 <script>
@@ -454,6 +455,7 @@
   let youDetCount = 1;
   let oppDetCount = 1;
   let syncExpanded = false;
+  let visitorCount = null;
 
   const app = document.getElementById("app");
 
@@ -975,6 +977,14 @@
         localStorage.removeItem(k);
       }
     }
+    // unique visitor ping
+    try{
+      const vr=await fetch(`${API}?action=visit`,{headers:{"X-User-ID":USER_ID}});
+      const vd=await vr.json();
+      visitorCount=vd.count;
+      const vEl=document.getElementById("visitor-footer");
+      if(vEl&&visitorCount) vEl.innerHTML=`<p class="footnote" style="margin-top:6px">${visitorCount.toLocaleString()} commander${visitorCount===1?"":"s"} on record</p>`;
+    }catch(e){}
     try{
       const raw=await load(KEY);
       if(raw){ games=JSON.parse(raw)||[]; }

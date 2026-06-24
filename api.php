@@ -30,6 +30,22 @@ if (!is_dir($dataDir)) {
 
 $file = $dataDir . '/' . strtolower($userId) . '.json';
 
+// ---- visitor counter ----
+if (($_GET['action'] ?? '') === 'visit') {
+    $vFile    = $dataDir . '/_visitors.json';
+    $visitors = file_exists($vFile) ? (json_decode(file_get_contents($vFile), true) ?? []) : [];
+    $count    = $visitors['count'] ?? 0;
+    $seen     = $visitors['seen']  ?? [];
+    $key      = strtolower($userId);
+    if (!isset($seen[$key])) {
+        $count++;
+        $seen[$key] = true;
+        file_put_contents($vFile, json_encode(['count' => $count, 'seen' => $seen]));
+    }
+    echo json_encode(['count' => $count]);
+    exit;
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     $key = $_GET['key'] ?? '';
     if (!in_array($key, $allowed, true)) {
