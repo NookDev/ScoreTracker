@@ -9,6 +9,7 @@
 <meta name="theme-color" content="#c8a84b">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Campaign Ledger">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self'">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💀</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -490,9 +491,9 @@
     const k = "ledger:uid";
     let id = localStorage.getItem(k);
     if(!id){
-      // 5-char ID, no ambiguous chars (0/O, 1/I/L)
+      // 12-char ID, no ambiguous chars (0/O, 1/I/L); legacy 5-char IDs kept working
       const chars = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
-      id = Array.from({length:5}, ()=>chars[Math.floor(Math.random()*chars.length)]).join("");
+      id = Array.from({length:12}, ()=>chars[Math.floor(Math.random()*chars.length)]).join("");
       localStorage.setItem(k, id);
     }
     return id;
@@ -1054,10 +1055,9 @@
     const applyBtn=document.getElementById("btn-apply-id");
     if(applyBtn) applyBtn.addEventListener("click",()=>{
       const newId=(document.getElementById("sync-id-input")?.value||"").trim().toUpperCase();
-      const validShort=/^[A-Z0-9]{5}$/i.test(newId);
-      const validUUID=/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(newId);
-      if(!validShort && !validUUID){
-        alert("That doesn't look like a valid Sync ID — should be 5 characters.");
+      const validId=/^([A-Z0-9]{5}|[A-Z0-9]{12}|[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})$/i.test(newId);
+      if(!validId){
+        alert("That doesn't look like a valid Sync ID — should be 5 or 12 characters (or a UUID).");
         return;
       }
       localStorage.setItem("ledger:uid", newId);
