@@ -28,7 +28,9 @@ if (!is_dir($dataDir)) {
 }
 
 // ---- rate limiting ----
-// Limits: 60 GETs per minute, 20 POSTs per minute, per user ID + IP combo.
+// Two layers:
+//   1. Per-IP global limit (120 req/min) — blocks brute-force enumeration of sync IDs
+//   2. Per-user+IP limit (60 GETs / 20 POSTs per min) — blocks per-user abuse
 // Uses fixed 60-second windows stored as small JSON files in ledger-data/_rl/.
 function check_rate_limit(string $dataDir, string $userId, string $method): void {
     $rlDir = $dataDir . '/_rl';
@@ -38,24 +40,44 @@ function check_rate_limit(string $dataDir, string $userId, string $method): void
 
     // On LiteSpeed (direct, no upstream proxy), REMOTE_ADDR is the real client IP.
     // Do NOT trust X-Forwarded-For — clients can spoof it to bypass rate limits.
-    $ip     = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+    $ip  = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+    $now = time();
+
+    // -- Layer 1: global per-IP limit --
+    $ipKey   = hash('sha256', 'ip|' . $ip);
+    $ipFile  = $rlDir . '/' . $ipKey . '.json';
+    $ipState = file_exists($ipFile) ? (json_decode(file_get_contents($ipFile), true) ?? []) : [];
+
+    if (($ipState['window_start'] ?? 0) + 60 <= $now) {
+        $ipState = ['window_start' => $now, 'count' => 0];
+    }
+    $ipState['count'] = ($ipState['count'] ?? 0) + 1;
+
+    if ($ipState['count'] > 120) {
+        $retry = ($ipState['window_start'] + 60) - $now;
+        header('Retry-After: ' . $retry);
+        http_response_code(429);
+        echo json_encode(['error' => 'Too many requests', 'retry_after' => $retry]);
+        exit;
+    }
+    file_put_contents($ipFile, json_encode($ipState));
+
+    // -- Layer 2: per-user+IP limit --
     $key    = hash('sha256', strtolower($userId) . '|' . $ip);
     $rlFile = $rlDir . '/' . $key . '.json';
-    $now    = time();
-    $window = 60;
     $limits = ['GET' => 60, 'POST' => 20];
     $max    = $limits[$method] ?? 60;
 
     $state = file_exists($rlFile) ? (json_decode(file_get_contents($rlFile), true) ?? []) : [];
 
-    if (($state['window_start'] ?? 0) + $window <= $now) {
+    if (($state['window_start'] ?? 0) + 60 <= $now) {
         $state = ['window_start' => $now, 'GET' => 0, 'POST' => 0];
     }
 
     $state[$method] = ($state[$method] ?? 0) + 1;
 
     if ($state[$method] > $max) {
-        $retry = ($state['window_start'] + $window) - $now;
+        $retry = ($state['window_start'] + 60) - $now;
         header('Retry-After: ' . $retry);
         http_response_code(429);
         echo json_encode(['error' => 'Too many requests', 'retry_after' => $retry]);
