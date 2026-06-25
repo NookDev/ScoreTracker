@@ -413,8 +413,7 @@
     content:"";position:absolute;top:100%;left:50%;transform:translateX(-50%);
     border:6px solid transparent;border-top-color:var(--line);
   }
-  .sync-help-wrap:hover .sync-tooltip,
-  .sync-help-wrap:focus-within .sync-tooltip{display:block}
+  .sync-help-wrap.open .sync-tooltip{display:block}
 
   .footnote{margin-top:42px;text-align:center;font-size:13px;color:var(--bone-dim);font-family:"Oswald";letter-spacing:.1em;text-transform:uppercase}
   .loading{text-align:center;padding:60px;color:var(--bone-dim);font-family:"Oswald";letter-spacing:.2em;text-transform:uppercase}
@@ -473,7 +472,7 @@
     <div class="loading">Loading muster rolls…</div>
   </div>
 
-  <p class="footnote">Win rate = victories ÷ games played · Data saved to this ledger automatically</p>
+  <p class="footnote">Win rate = victories ÷ games played · Data saved to this ledger automatically <span class="sync-help-wrap" id="autosave-help-wrap"><button class="sync-help-btn" id="autosave-help-btn" aria-label="Auto-save help">?</button><span class="sync-tooltip" style="width:200px">Every game you log is saved instantly to the server — no manual save needed. Your data is there when you return on any device.</span></span></p>
   <div id="visitor-footer"></div>
 </div>
 
@@ -1025,6 +1024,24 @@
     });
 
     // sync ID
+    // tooltip toggles — click/tap to open, tap outside to close
+    document.querySelectorAll(".sync-help-btn").forEach(btn=>{
+      btn.addEventListener("click", e=>{
+        e.stopPropagation();
+        const wrap=btn.closest(".sync-help-wrap");
+        const isOpen=wrap.classList.contains("open");
+        document.querySelectorAll(".sync-help-wrap.open").forEach(w=>w.classList.remove("open"));
+        if(!isOpen) wrap.classList.add("open");
+      });
+    });
+    // attach dismiss listener once — guard against multiple wire() calls
+    if(!document._tooltipDismiss){
+      document._tooltipDismiss=true;
+      document.addEventListener("click", ()=>{
+        document.querySelectorAll(".sync-help-wrap.open").forEach(w=>w.classList.remove("open"));
+      });
+    }
+
     const copyBtn=document.getElementById("btn-copy-id");
     if(copyBtn) copyBtn.addEventListener("click",async()=>{
       try{ await navigator.clipboard.writeText(USER_ID); }
