@@ -316,6 +316,16 @@
   @media(max-width:640px){
     .entry .right{flex-direction:column;align-items:flex-end;gap:8px}
   }
+  @media(max-width:480px){
+    .entry{grid-template-columns:50px 1fr;grid-template-rows:auto auto;gap:8px 10px;padding:12px 4px 12px 11px}
+    .entry .badge{grid-column:1;grid-row:1;font-size:11px;padding:5px 0;align-self:start}
+    .entry .matchup{grid-column:2;grid-row:1}
+    .entry .right{grid-column:1/-1;grid-row:2;flex-direction:row;align-items:center;justify-content:space-between;gap:8px;border-top:1px solid rgba(46,46,46,.7);padding-top:10px;margin-top:2px}
+    .entry .factions{font-size:13px}
+    .entry .score{font-size:16px}
+    .entry .dets{font-size:12px}
+    .entry .meta{font-size:12px}
+  }
   .entry .score{font-family:"Cinzel";font-size:18px;font-weight:600;white-space:nowrap}
   .entry .score .mine{color:var(--brass-bright)}
   .entry .score .sep{color:var(--bone-dim);margin:0 4px;font-size:14px}
