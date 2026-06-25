@@ -269,6 +269,22 @@
   .subscores .sv{color:var(--line);margin:0 6px}
   .score-total-label{font-family:"Oswald",sans-serif;text-transform:uppercase;letter-spacing:.12em;font-size:11px;color:var(--bone-dim);margin-bottom:4px;display:block}
 
+  /* ---------- Entry More Info accordion ---------- */
+  .entry-more{margin-top:6px;}
+  .entry-more summary{
+    list-style:none;cursor:pointer;display:inline-flex;align-items:center;gap:5px;
+    font-family:"Oswald",sans-serif;text-transform:uppercase;letter-spacing:.14em;
+    font-size:10px;color:var(--bone-dim);opacity:.65;user-select:none;
+  }
+  .entry-more summary::-webkit-details-marker{display:none}
+  .entry-more summary::before{content:"▶";font-size:7px;transition:transform .15s;display:inline-block;}
+  .entry-more[open] summary::before{transform:rotate(90deg)}
+  .entry-more-body{display:flex;flex-wrap:wrap;gap:4px 8px;margin-top:7px;}
+  .entry-flag{
+    font-family:"Oswald",sans-serif;font-size:9px;letter-spacing:.12em;text-transform:uppercase;
+    color:var(--bone-dim);border:1px solid var(--line);padding:2px 7px;border-radius:2px;
+  }
+
   /* ---------- Filters ---------- */
   .filters{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end}
   .filters .field{min-width:170px;flex:1}
@@ -876,8 +892,16 @@
         ?`<div class="disp-line">${youDisp?`<span class="disp-pill">${esc(youDisp)}</span>`:`<span></span>`}<span class="dv">vs</span>${oppDisp?`<span class="disp-pill opp">${esc(oppDisp)}</span>`:`<span></span>`}</div>`:"";
       const hasSubscores=g.youPrimary!=null||g.youSecondary!=null||g.oppPrimary!=null||g.oppSecondary!=null;
       const subLine=hasSubscores?`<div class="subscores">P\u202f${g.youPrimary??'—'}\u2002S\u202f${g.youSecondary??'—'}<span class="sv">vs</span>P\u202f${g.oppPrimary??'—'}\u2002S\u202f${g.oppSecondary??'—'}</div>`:"";
-      const paintedLine=(g.youPainted||g.oppPainted)
-        ?`<div class="disp-line">${g.youPainted?`<span class="disp-pill">Painted</span>`:`<span></span>`}<span class="dv">vs</span>${g.oppPainted?`<span class="disp-pill opp">Painted</span>`:`<span></span>`}</div>`:"";
+      const moreFlags=[];
+      if(g.youFirst===true) moreFlags.push("Went first");
+      if(g.youFirst===false) moreFlags.push("Went second");
+      if(g.youDeployedFirst===true) moreFlags.push("Deployed first");
+      if(g.youDeployedFirst===false) moreFlags.push("Deployed second");
+      if(g.youPainted) moreFlags.push("My army painted");
+      if(g.oppPainted) moreFlags.push("Opponent painted");
+      const moreInfo=moreFlags.length
+        ?`<details class="entry-more"><summary>More Info</summary><div class="entry-more-body">${moreFlags.map(f=>`<span class="entry-flag">${f}</span>`).join("")}</div></details>`
+        :"";
       return `
         <div class="entry" style="border-left-color:${allegianceColor(g.youFaction)}">
           <div class="badge ${r}">${rLabel}</div>
@@ -885,8 +909,8 @@
             <div class="factions">${esc(g.youFaction)}${youN}<span class="v">vs</span>${esc(g.oppFaction)}${oppN}</div>
             ${detLine}
             ${dispLine}
-            ${paintedLine}
             ${subLine}
+            ${moreInfo}
             <div class="meta">${fmtDate(g.date)}${g.location?`<span class="loc">${esc(g.location)}</span>`:""}</div>
           </div>
           <div class="right">
