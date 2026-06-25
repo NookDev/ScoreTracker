@@ -394,6 +394,27 @@
   .sync-input-row{display:flex;gap:10px;margin-top:10px;flex-wrap:wrap}
   .sync-input-row input{flex:1;min-width:200px}
   .sync-warn{font-size:12px;color:var(--bone-dim);margin:8px 0 0;font-style:italic;opacity:.7}
+  .sync-help-wrap{position:relative;display:inline-flex;align-items:center;margin-left:6px}
+  .sync-help-btn{
+    width:18px;height:18px;border-radius:50%;border:1.5px solid var(--bone-dim);
+    background:none;color:var(--bone-dim);font-size:11px;font-family:"Barlow",sans-serif;
+    font-weight:600;line-height:1;cursor:pointer;padding:0;display:inline-flex;
+    align-items:center;justify-content:center;
+  }
+  .sync-help-btn:hover{color:var(--bone);border-color:var(--bone)}
+  .sync-tooltip{
+    display:none;position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);
+    background:var(--panel);border:1px solid var(--line);border-radius:3px;
+    padding:10px 12px;width:220px;font-size:12px;color:var(--bone-dim);
+    font-family:"Barlow",sans-serif;line-height:1.5;z-index:10;
+    box-shadow:0 4px 12px rgba(0,0,0,.5);
+  }
+  .sync-tooltip::after{
+    content:"";position:absolute;top:100%;left:50%;transform:translateX(-50%);
+    border:6px solid transparent;border-top-color:var(--line);
+  }
+  .sync-help-wrap:hover .sync-tooltip,
+  .sync-help-wrap:focus-within .sync-tooltip{display:block}
 
   .footnote{margin-top:42px;text-align:center;font-size:13px;color:var(--bone-dim);font-family:"Oswald";letter-spacing:.1em;text-transform:uppercase}
   .loading{text-align:center;padding:60px;color:var(--bone-dim);font-family:"Oswald";letter-spacing:.2em;text-transform:uppercase}
@@ -817,7 +838,7 @@
       </section>
 
       <section class="sec">
-        <div class="sec-head"><h2>Sync ID</h2><span class="hint">Use your data on another device</span></div>
+        <div class="sec-head"><h2>Sync ID</h2><span class="hint">Use your data on another device</span><span class="sync-help-wrap"><button class="sync-help-btn" aria-label="Sync ID help">?</button><span class="sync-tooltip">Enter this code once on any other device and it will load your ledger. Your data follows the code — not the browser.</span></span></div>
         ${games.length ? `
         <div class="sync-bar">
           <code class="sync-id">${USER_ID}</code>
