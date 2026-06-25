@@ -30,6 +30,50 @@ if (!is_dir($dataDir)) {
 
 $file = $dataDir . '/' . strtolower($userId) . '.json';
 
+// ---- rate limiting ----
+// Limits: 60 GETs per minute, 20 POSTs per minute, per user ID + IP combo.
+// Uses fixed 60-second windows stored as small JSON files in ledger-data/_rl/.
+function check_rate_limit(string $dataDir, string $userId, string $method): void {
+    $rlDir = $dataDir . '/_rl';
+    if (!is_dir($rlDir)) {
+        mkdir($rlDir, 0755, true);
+    }
+
+    // On LiteSpeed (direct, no upstream proxy), REMOTE_ADDR is the real client IP.
+    // Do NOT trust X-Forwarded-For — clients can spoof it to bypass rate limits.
+    $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+    $key     = hash('sha256', strtolower($userId) . '|' . $ip);
+    $rlFile  = $rlDir . '/' . $key . '.json';
+    $now     = time();
+    $window  = 60; // seconds
+    $limits  = ['GET' => 60, 'POST' => 20];
+    $max     = $limits[$method] ?? 60;
+
+    $state = file_exists($rlFile) ? (json_decode(file_get_contents($rlFile), true) ?? []) : [];
+
+    // Reset window if expired
+    if (($state['window_start'] ?? 0) + $window <= $now) {
+        $state = ['window_start' => $now, 'GET' => 0, 'POST' => 0];
+    }
+
+    $state[$method] = ($state[$method] ?? 0) + 1;
+
+    if ($state[$method] > $max) {
+        $retry = ($state['window_start'] + $window) - $now;
+        header('Retry-After: ' . $retry);
+        http_response_code(429);
+        echo json_encode(['error' => 'Too many requests', 'retry_after' => $retry]);
+        exit;
+    }
+
+    file_put_contents($rlFile, json_encode($state));
+}
+
+$method = $_SERVER['REQUEST_METHOD'];
+if ($method === 'GET' || $method === 'POST') {
+    check_rate_limit($dataDir, $userId, $method);
+}
+
 // ---- visitor counter ----
 if (($_GET['action'] ?? '') === 'visit') {
     $vFile    = $dataDir . '/_visitors.json';
@@ -46,7 +90,7 @@ if (($_GET['action'] ?? '') === 'visit') {
     exit;
 }
 
-if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+if ($method === 'GET') {
     $key = $_GET['key'] ?? '';
     if (!in_array($key, $allowed, true)) {
         http_response_code(400);
@@ -60,7 +104,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     $data = json_decode(file_get_contents($file), true) ?? [];
     echo json_encode(['value' => $data[$key] ?? null]);
 
-} elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
+} elseif ($method === 'POST') {
     $body  = json_decode(file_get_contents('php://input'), true);
     $key   = $body['key']   ?? '';
     $value = $body['value'] ?? null;
