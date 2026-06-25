@@ -695,6 +695,10 @@
                         <input id="f-youSec" type="number" inputmode="numeric" min="0" placeholder="0" value="${eg!=null&&eg.youSecondary!=null?eg.youSecondary:''}">
                       </div>
                     </div>
+                    <div class="check-field" style="grid-column:1/-1;padding:4px 0 0;">
+                      <input type="checkbox" id="f-youPainted" ${eg==null||eg.youPainted===true?"checked":""}>
+                      <label for="f-youPainted">Painted <span class="opt">+10pts</span></label>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -724,6 +728,10 @@
                         <input id="f-oppSec" type="number" inputmode="numeric" min="0" placeholder="0" value="${eg!=null&&eg.oppSecondary!=null?eg.oppSecondary:''}">
                       </div>
                     </div>
+                    <div class="check-field" style="grid-column:1/-1;padding:4px 0 0;">
+                      <input type="checkbox" id="f-oppPainted" ${eg&&eg.oppPainted===true?"checked":""}>
+                      <label for="f-oppPainted">Painted <span class="opt">+10pts</span></label>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -736,9 +744,15 @@
               <label>Location <span class="opt">optional</span></label>
               <input id="f-loc" placeholder="e.g. Tabletop Perth" value="${esc(eg?eg.location:"")}" autocomplete="off">
             </div>
-            <div class="check-field">
-              <input type="checkbox" id="f-first" ${eg&&eg.youFirst===true?"checked":""}>
-              <label for="f-first">I went first</label>
+            <div class="check-field" style="gap:22px;flex-wrap:wrap;">
+              <span style="display:flex;align-items:center;gap:10px;">
+                <input type="checkbox" id="f-first" ${eg&&eg.youFirst===true?"checked":""}>
+                <label for="f-first">I went first</label>
+              </span>
+              <span style="display:flex;align-items:center;gap:10px;">
+                <input type="checkbox" id="f-deployed" ${eg&&eg.youDeployedFirst===true?"checked":""}>
+                <label for="f-deployed">I deployed first</label>
+              </span>
             </div>
           </div>
           <div class="actions">
@@ -1022,6 +1036,12 @@
 
     const firstEl=document.getElementById("f-first");
     const youFirst=firstEl?firstEl.checked:null;
+    const deployedEl=document.getElementById("f-deployed");
+    const youDeployedFirst=deployedEl?deployedEl.checked:null;
+    const youPaintedEl=document.getElementById("f-youPainted");
+    const youPainted=youPaintedEl?youPaintedEl.checked:false;
+    const oppPaintedEl=document.getElementById("f-oppPainted");
+    const oppPainted=oppPaintedEl?oppPaintedEl.checked:false;
     const youDetachments=[0,1,2].map(i=>val(`f-youDet-${i}`)).filter(Boolean);
     const oppDetachments=[0,1,2].map(i=>val(`f-oppDet-${i}`)).filter(Boolean);
     const numOrNull=id=>{ const v=val(id); return v===""?null:Number(v); };
@@ -1042,7 +1062,7 @@
           date:val("f-date")||today(),
           youFaction:youF, youName:val("f-youN"), youDetachments,
           oppFaction:oppF, oppName:val("f-oppN"), oppDetachments,
-          location:val("f-loc"), youScore:ys, oppScore:os, youFirst,
+          location:val("f-loc"), youScore:ys, oppScore:os, youFirst, youDeployedFirst, youPainted, oppPainted,
           youPrimary, youSecondary, oppPrimary, oppSecondary,
           youDisposition, oppDisposition
         };
@@ -1058,7 +1078,7 @@
       youFaction:youF, youName:val("f-youN"), youDetachments,
       oppFaction:oppF, oppName:val("f-oppN"), oppDetachments,
       location:val("f-loc"),
-      youScore:ys, oppScore:os, youFirst,
+      youScore:ys, oppScore:os, youFirst, youDeployedFirst, youPainted, oppPainted,
       youPrimary, youSecondary, oppPrimary, oppSecondary,
       youDisposition, oppDisposition
     };
