@@ -876,6 +876,8 @@
         ?`<div class="disp-line">${youDisp?`<span class="disp-pill">${esc(youDisp)}</span>`:`<span></span>`}<span class="dv">vs</span>${oppDisp?`<span class="disp-pill opp">${esc(oppDisp)}</span>`:`<span></span>`}</div>`:"";
       const hasSubscores=g.youPrimary!=null||g.youSecondary!=null||g.oppPrimary!=null||g.oppSecondary!=null;
       const subLine=hasSubscores?`<div class="subscores">P\u202f${g.youPrimary??'—'}\u2002S\u202f${g.youSecondary??'—'}<span class="sv">vs</span>P\u202f${g.oppPrimary??'—'}\u2002S\u202f${g.oppSecondary??'—'}</div>`:"";
+      const paintedLine=(g.youPainted||g.oppPainted)
+        ?`<div class="disp-line">${g.youPainted?`<span class="disp-pill">Painted</span>`:`<span></span>`}<span class="dv">vs</span>${g.oppPainted?`<span class="disp-pill opp">Painted</span>`:`<span></span>`}</div>`:"";
       return `
         <div class="entry" style="border-left-color:${allegianceColor(g.youFaction)}">
           <div class="badge ${r}">${rLabel}</div>
@@ -883,6 +885,7 @@
             <div class="factions">${esc(g.youFaction)}${youN}<span class="v">vs</span>${esc(g.oppFaction)}${oppN}</div>
             ${detLine}
             ${dispLine}
+            ${paintedLine}
             ${subLine}
             <div class="meta">${fmtDate(g.date)}${g.location?`<span class="loc">${esc(g.location)}</span>`:""}</div>
           </div>
