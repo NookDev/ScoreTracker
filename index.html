@@ -152,6 +152,16 @@
   .turn-line .tl-label{color:var(--bone-dim)}
   .turn-line .tl-rate{color:var(--brass-bright);font-family:"Cinzel",serif;font-size:14px;font-weight:600}
   .turn-line .tl-rec{color:var(--bone-dim);font-size:11px}
+  .nemesis-line{
+    display:flex;align-items:center;justify-content:center;gap:10px;
+    margin:10px 0 0;padding:8px 16px;
+    background:rgba(224,82,82,.08);border:1px solid rgba(224,82,82,.25);border-radius:3px;
+    font-family:"Oswald",sans-serif;text-transform:uppercase;letter-spacing:.14em;font-size:12px;
+  }
+  .nemesis-line .nem-skull{font-size:15px;line-height:1;opacity:.8}
+  .nemesis-line .nem-label{color:var(--oxide);letter-spacing:.2em;font-size:11px;white-space:nowrap}
+  .nemesis-line .nem-name{color:var(--bone);font-size:14px;font-weight:600;letter-spacing:.08em}
+  .nemesis-line .nem-rec{color:var(--bone-dim);font-size:11px}
   .det-controls{display:flex;gap:6px;margin-top:6px;align-items:center}
   .dp-meter{
     font-family:"Oswald",sans-serif;font-size:11px;letter-spacing:.12em;text-transform:uppercase;
@@ -201,6 +211,11 @@
     font-weight:600;font-size:15px;margin:0;color:var(--brass);
   }
   .sec-head .hint{font-size:13px;color:var(--bone-dim);margin-left:auto}
+  @media(max-width:640px){
+    .sec-head-stack{flex-wrap:wrap;gap:8px 14px}
+    .sec-head-stack h2{flex:1 0 100%}
+    .sec-head-stack .hint{margin-left:0}
+  }
 
   /* ---------- Form ---------- */
   .form{
@@ -344,6 +359,24 @@
     .entry .dets{font-size:12px}
     .entry .meta{font-size:12px}
   }
+  @media(max-width:375px){
+    .wrap{padding-left:14px;padding-right:14px}
+    .eyebrow{letter-spacing:.15em;padding-left:.15em}
+    .masthead .sub{letter-spacing:.1em}
+    .toggle{flex-wrap:wrap}
+    .tg{padding:5px 8px;font-size:11px}
+    .turn-line{gap:12px}
+    .nemesis-line{flex-wrap:wrap;justify-content:center;text-align:center}
+    .filters .field{min-width:0;flex:1 1 100%}
+    .honours-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+    .honours th,.honours td{padding:8px 7px}
+    .entry .factions{overflow-wrap:break-word}
+    .entry .dets{overflow-wrap:break-word}
+    .sec-head{flex-wrap:wrap;gap:8px 14px}
+    .sec-head h2{flex:1 0 100%}
+    .sec-head .hint{margin-left:0}
+    .sync-input-row input{min-width:0}
+  }
   .entry .score{font-family:"Cinzel";font-size:18px;font-weight:600;white-space:nowrap}
   .entry .score .mine{color:var(--brass-bright)}
   .entry .score .sep{color:var(--bone-dim);margin:0 4px;font-size:14px}
@@ -366,10 +399,29 @@
     color:var(--bg);background:var(--brass);padding:1px 6px;border-radius:2px;font-weight:600;opacity:.85;
   }
   .disp-pill.opp{background:var(--bone-dim);}
+  .nemesis-row td{background:rgba(224,82,82,.07)}
+  .nemesis-row td:first-child{color:var(--oxide)}
+  .nemesis-badge{
+    font-family:"Oswald",sans-serif;font-size:9px;letter-spacing:.1em;text-transform:uppercase;
+    color:var(--oxide);border:1px solid var(--oxide);padding:1px 5px;border-radius:2px;
+    display:block;margin:4px 0 0;width:fit-content;opacity:.85;
+  }
+  .punchbag-row td{background:rgba(76,175,125,.07)}
+  .punchbag-row td:first-child{color:var(--olive)}
+  .punchbag-badge{
+    font-family:"Oswald",sans-serif;font-size:9px;letter-spacing:.1em;text-transform:uppercase;
+    color:var(--olive);border:1px solid var(--olive);padding:1px 5px;border-radius:2px;
+    display:block;margin:4px 0 0;width:fit-content;opacity:.85;
+  }
   .toggle{display:inline-flex;border:1px solid var(--line);border-radius:2px;overflow:hidden}
   .tg{background:transparent;color:var(--bone-dim);border:none;padding:6px 12px;font-size:12px;letter-spacing:.12em}
   .tg.on{background:var(--brass);color:#0f0f0f;font-weight:600}
   .tg:not(.on):hover{color:var(--bone)}
+  .tab-count{
+    display:inline-block;background:rgba(200,168,75,.25);color:var(--brass);
+    border-radius:2px;font-size:10px;padding:0 4px;margin-left:3px;font-weight:600;
+  }
+  .tg.on .tab-count{background:rgba(0,0,0,.2);color:inherit}
 
   .empty{
     text-align:center;padding:46px 20px;color:var(--bone-dim);
@@ -523,6 +575,7 @@
   // ---- state ----
   let games = [];
   let profile = { name:"", faction:"", detachment:"" };
+  let lastOppName = "";
   let honoursMode = "faction";
   let filters = { you:"all", opp:"all", result:"all" };
   let editingId = null;
@@ -702,7 +755,6 @@
         <div class="tl-item"><span class="tl-label">2nd Turn</span><span class="tl-rate">${ts.second.t?ts.second.rate+"%":"—"}</span><span class="tl-rec">${ts.second.t?ts.second.w+"W·"+ts.second.l+"L·"+ts.second.d+"D":""}</span></div>
       </div>`:""}
 
-
       <section class="sec">
         <div class="sec-head"><h2>${eg?"Edit Engagement":"Log an Engagement"}</h2></div>
         <div class="form">
@@ -751,7 +803,7 @@
                   ${renderDetFields("opp", eg?eg.oppFaction:"", eg?eg.oppDetachments||(eg.oppDetachment?[eg.oppDetachment]:[]):[], oppDetCount)}
                   <div class="field">
                     <label>Player <span class="opt">optional</span></label>
-                    <input id="f-oppN" placeholder="Opponent" value="${esc(eg?eg.oppName:"")}" autocomplete="off">
+                    <input id="f-oppN" placeholder="Opponent" value="${esc(eg?eg.oppName:lastOppName)}" autocomplete="off">
                   </div>
                   <div class="field">
                     <label>Their Score</label>
@@ -862,32 +914,48 @@
 
   function renderHonours(){
     const mode = honoursMode;
-    const rows = breakdown(mode);
-    if(!rows.length) return "";
-    const colHead = mode==="detachment" ? "Detachment" : "Faction";
+    if(!games.length) return "";
+
+    const playerNames = new Set(games.map(g=>(g.oppName||"").trim()).filter(Boolean));
+    const playerCount = playerNames.size;
+
+    let tableHTML = "";
+    if(mode==="faction"||mode==="detachment"){
+      const rows = breakdown(mode);
+      if(!rows.length) return "";
+      const colHead = mode==="detachment" ? "Detachment" : "Faction";
+      tableHTML = `<table class="honours">
+        <thead><tr><th>${colHead}</th><th>Games</th><th>Record</th><th>Win&nbsp;Rate</th></tr></thead>
+        <tbody>
+          ${rows.map(r=>{
+            const clickable = mode==="faction";
+            const active = clickable && filters.you===r.key;
+            return `<tr class="${clickable?"clickable":""} ${active?"active":""}" ${clickable?`data-faction="${esc(r.key)}"`:""}>
+              <td>${esc(r.key)}</td>
+              <td>${r.t}</td>
+              <td class="mini-rec">${r.w}–${r.l}–${r.d}</td>
+              <td class="wr">${r.rate}%</td>
+            </tr>`;
+          }).join("")}
+        </tbody>
+      </table>`;
+    } else if(mode==="disposition"){
+      tableHTML = renderDispositionTab(games);
+    } else if(mode==="player"){
+      tableHTML = renderPlayerTab(games);
+    }
+
     return `
       <section class="sec">
-        <div class="sec-head"><h2>Battle Honours</h2>
+        <div class="sec-head sec-head-stack"><h2>Battle Honours</h2>
           <span class="hint"><span class="toggle">
             <button class="tg ${mode==="faction"?"on":""}" data-mode="faction">By Faction</button>
             <button class="tg ${mode==="detachment"?"on":""}" data-mode="detachment">By Detachment</button>
+            <button class="tg ${mode==="disposition"?"on":""}" data-mode="disposition">Disposition</button>
+            <button class="tg ${mode==="player"?"on":""}" data-mode="player">Players${playerCount?` <span class="tab-count">${playerCount}</span>`:""}</button>
           </span></span>
         </div>
-        <table class="honours">
-          <thead><tr><th>${colHead}</th><th>Games</th><th>Record</th><th>Win&nbsp;Rate</th></tr></thead>
-          <tbody>
-            ${rows.map(r=>{
-              const clickable = mode==="faction";
-              const active = clickable && filters.you===r.key;
-              return `<tr class="${clickable?"clickable":""} ${active?"active":""}" ${clickable?`data-faction="${esc(r.key)}"`:""}>
-                <td>${esc(r.key)}</td>
-                <td>${r.t}</td>
-                <td class="mini-rec">${r.w}–${r.l}–${r.d}</td>
-                <td class="wr">${r.rate}%</td>
-              </tr>`;
-            }).join("")}
-          </tbody>
-        </table>
+        <div class="honours-wrap">${tableHTML}</div>
       </section>`;
   }
 
@@ -944,6 +1012,67 @@
           </div>
         </div>`;
     }).join("")}</div>`;
+  }
+
+  function renderDispositionTab(list){
+    if(!games.length) return `<div class="empty"><div class="big">No engagements logged</div>Record your first battle above.</div>`;
+    const map={};
+    list.forEach(g=>{
+      const dets=g.youDetachments?.length?g.youDetachments:(g.youDetachment?[g.youDetachment]:[]);
+      const disp=g.youDisposition||(dets.length===1?DISPOSITIONS[dets[0]]:null)||null;
+      const key=disp||"(unknown)";
+      (map[key]=map[key]||[]).push(g);
+    });
+    const rows=Object.keys(map).map(k=>{ const s=tally(map[k]); return {key:k,...s}; }).sort((a,b)=>b.rate-a.rate||b.t-a.t);
+    if(!rows.length) return `<div class="empty"><div class="big">No data</div>Games with recorded detachments will appear here.</div>`;
+    return `<table class="honours">
+      <thead><tr><th>Disposition</th><th>Games</th><th>Record</th><th>Win&nbsp;Rate</th></tr></thead>
+      <tbody>${rows.map(r=>`<tr>
+        <td>${esc(r.key)}</td>
+        <td>${r.t}</td>
+        <td class="mini-rec">${r.w}–${r.l}–${r.d}</td>
+        <td class="wr">${r.rate}%</td>
+      </tr>`).join("")}</tbody>
+    </table>`;
+  }
+
+  function renderPlayerTab(list){
+    if(!games.length) return `<div class="empty"><div class="big">No engagements logged</div>Record your first battle above.</div>`;
+    const map={};
+    list.forEach(g=>{
+      const key=(g.oppName||"").trim()||null;
+      if(!key) return;
+      (map[key]=map[key]||[]).push(g);
+    });
+    const unsorted=Object.keys(map).map(k=>{ const s=tally(map[k]); return {key:k,...s}; });
+    if(!unsorted.length) return `<div class="empty"><div class="big">No named opponents</div>Add an opponent player name when logging a game.</div>`;
+    // nemesis = most losses (min 1); ties broken by fewest wins
+    let nemesis=null, maxL=0, minW=Infinity;
+    unsorted.forEach(r=>{ if(r.l>maxL||(r.l===maxL&&r.l>0&&r.w<minW)){ maxL=r.l; minW=r.w; nemesis=r.key; } });
+    // punching bag = most wins (min 1); ties broken by fewest losses
+    let punchbag=null, maxW=0, minL=Infinity;
+    unsorted.forEach(r=>{ if(r.w>maxW||(r.w===maxW&&r.w>0&&r.l<minL)){ maxW=r.w; minL=r.l; punchbag=r.key; } });
+    // if same person is both, only show nemesis
+    if(punchbag===nemesis) punchbag=null;
+    const isPinned=r=>( (r.key===nemesis&&r.l>0) || (r.key===punchbag&&r.w>0) );
+    const rows=[
+      ...unsorted.filter(r=>r.key===nemesis&&r.l>0),
+      ...unsorted.filter(r=>r.key===punchbag&&r.w>0),
+      ...unsorted.filter(r=>!isPinned(r)).sort((a,b)=>a.key.localeCompare(b.key))
+    ];
+    return `<table class="honours">
+      <thead><tr><th>Opponent</th><th>Games</th><th>Record</th><th>Win&nbsp;Rate</th></tr></thead>
+      <tbody>${rows.map(r=>{
+        const isNemesis=r.key===nemesis&&r.l>0;
+        const isPunchbag=r.key===punchbag&&r.w>0;
+        return `<tr class="${isNemesis?"nemesis-row":isPunchbag?"punchbag-row":""}">
+          <td>${esc(r.key)}${isNemesis?`<span class="nemesis-badge">☠ Nemesis</span>`:""}${isPunchbag?`<span class="punchbag-badge">⚔ Punching Bag</span>`:""}</td>
+          <td>${r.t}</td>
+          <td class="mini-rec">${r.w}–${r.l}–${r.d}</td>
+          <td class="wr">${r.rate}%</td>
+        </tr>`;
+      }).join("")}</tbody>
+    </table>`;
   }
 
   // ---- events ----
@@ -1151,6 +1280,7 @@
     games.push(g);
     youDetCount=1; oppDetCount=1;
     profile={ name:g.youName, faction:g.youFaction, detachment:youDetachments[0]||"", detachments:youDetachments };
+    if(g.oppName) lastOppName = g.oppName;
     await save(KEY, JSON.stringify(games));
     await save(PKEY, JSON.stringify(profile));
     render();
@@ -1192,6 +1322,9 @@
       oppDetachments:g.oppDetachments||(g.oppDetachment?[g.oppDetachment]:[]),
     }));
     games.forEach((g,i)=>g._i=i); // stable secondary sort key
+    // seed last opponent name from most recent game that has one
+    const lastWithOpp = [...games].reverse().find(g=>g.oppName);
+    if(lastWithOpp) lastOppName = lastWithOpp.oppName;
     try{
       const p=await load(PKEY);
       if(p){ profile=JSON.parse(p)||profile; }
