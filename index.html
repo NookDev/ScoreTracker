@@ -430,6 +430,11 @@
   .matchup-win{color:var(--olive);font-weight:600}
   .matchup-loss{color:var(--oxide);font-weight:600}
   .matchup-empty{color:var(--bone-dim);opacity:.4}
+  .disp-abbr{display:none}
+  @media(max-width:540px){
+    .matchup-table .disp-full{display:none}
+    .matchup-table .disp-abbr{display:inline}
+  }
 
   .empty{
     text-align:center;padding:46px 20px;color:var(--bone-dim);
@@ -602,6 +607,8 @@
   const DP_COSTS={"1st Company Task Force": 2, "Anvil Siege Force": 2, "Armoured Speartip": 3, "Bastion Task Force": 2, "Blade of Ultramar": 3, "Ceramite Sentinels": 3, "Emperor’s Shield": 2, "Firestorm Assault Force": 2, "Forgefather’s Seekers": 2, "Fulguris Task Force": 1, "Gladius Task Force": 3, "Hammer of Avernii": 2, "Headhunter Task Force": 2, "Ironstorm Spearhead": 2, "Librarius Conclave": 1, "Orbital Assault Force": 2, "Reclamation Force": 2, "Shadowmark Talon": 2, "Spearpoint Task Force": 2, "Stormlance Task Force": 2, "Subversion Assets": 1, "Vanguard Spearhead": 2, "Company of Hunters": 2, "Dark Age Arsenal": 1, "Darkflight Pursuit": 1, "Inner Circle Task Force": 2, "Interrogation Conclave": 1, "Lion’s Blade Task Force": 2, "Unforgiven Task Force": 2, "Wrath of the Rock": 3, "Angelic Inheritors": 3, "Encarmine Speartip": 1, "Legacy of Grace": 1, "Liberator Assault Group": 3, "Rage-Cursed Onslaught": 3, "The Angelic Host": 2, "The Lost Brethren": 2, "Wrath of the Doomed": 1, "Champions of Fenris": 1, "Legends of Saga and Song": 1, "Saga of the Beastslayer": 2, "Saga of the Bold": 2, "Saga of the Great Wolf": 2, "Saga of the Hunter": 2, "Veterans of the Fang": 1, "Companions of Vehemence": 2, "Godhammer Assault Force": 2, "Marshal’s Household": 1, "The Living Miracle": 1, "Vindication Task Force": 2, "Wrathful Procession": 1, "Black Spear Task Force": 3, "Argent Assault": 1, "Augurium Task Force": 2, "Banishers": 2, "Brotherhood Strike": 2, "Fires of Purgation": 1, "Hallowed Conclave": 2, "Immaterial Interdiction": 1, "Sanctic Spearhead": 2, "Warpbane Task Force": 3, "Army of Faith": 2, "Bringers of Flame": 3, "Champions of Faith": 2, "Chorus of Condemnation": 1, "Hallowed Martyrs": 3, "Penitent Host": 2, "Sacred Champions": 1, "Sanctified Orators": 1, "Auric Champions": 2, "Lions of the Emperor": 2, "Might of the Moritoi": 1, "Null Maiden Vigil": 2, "Shield Host": 2, "Silent Hunters": 1, "Solar Spearhead": 2, "Talons of the Emperor": 3, "Tharanatoi Hammerblow": 1, "Cohort Acquisitus": 1, "Cohort Cybernetica": 2, "Data-Psalm Conclave": 2, "Eradication Cohort": 3, "Explorator Maniple": 2, "Haloscreed Battle Clade": 3, "Lords of the Forge": 1, "Luminen Auto-Choir": 1, "Rad-Zone Corps": 2, "Skitarii Hunter Cohort": 2, "Abhuman Auxiliaries": 1, "Armoured Infantry": 2, "Bridgehead Strike": 1, "Combined Arms": 3, "Designation Force": 1, "Grizzled Company": 3, "Hammer of the Emperor": 2, "Mechanised Assault": 2, "Recon Element": 3, "Siege Regiment": 2, "Steel Hammer": 2, "Dominus Foebreakers": 1, "Freeblade Company": 3, "Gate Warden Lance": 2, "Questor Forgepact": 1, "Questoris Companions": 3, "Spearhead-At-Arms": 2, "Throne-Bonded Outriders": 1, "Valourstrike Lance": 2, "Imperialis Fleet": 3, "Ordo Hereticus, Purgation Force": 3, "Ordo Malleus, Daemon Hunters": 3, "Ordo Xenos, Alien Hunters": 3, "Veiled Blade Elimination Force": 3, "Cabal of Chaos": 1, "Chaos Cult": 2, "Creations of Bile": 3, "Cult of the Arkifane": 2, "Deceptors": 2, "Devotees of Destruction": 1, "Dread Talons": 2, "Fellhammer Siege-Host": 2, "Huron’s Marauders": 3, "Murdertalon Raiders": 1, "Nightmare Hunt": 2, "Pactbound Zealots": 3, "Renegade Raiders": 3, "Renegade Warband": 2, "Soulforged Warpack": 2, "Veterans of the Long War": 2, "Warpstrike Champions": 2, "Champions of Contagion": 2, "Contagion Engines": 1, "Death Lord’s Chosen": 2, "Flyblown Host": 1, "Mortarion’s Hammer": 2, "Paragons of Putrescence": 1, "Shamblerot Vectorium": 2, "Tallyband Summoners": 2, "Virulent Vectorium": 3, "Changehost of Deceit": 2, "Grand Coven": 3, "Hexwarp Thrallband": 2, "Ritual of Regeneration": 1, "Rubricae Phalanx": 3, "Sekhetar Cohort": 1, "Servants of Change": 1, "Warpforged Cabal": 2, "Warpmeld Pact": 2, "Berzerker Warband": 3, "Brazen Engines": 1, "Butchers of Khorne": 1, "Cult of Blood": 2, "Goretrack Onslaught": 2, "Khorne Daemonkin": 2, "Possessed Slaughterband": 2, "Vessels of Wrath": 1, "Carnival of Excess": 2, "Coterie of the Conceited": 3, "Court of the Phoenician": 2, "Elegant Brutes": 1, "Frenzied Host": 1, "Mercurial Host": 2, "Peerless Bladesmen": 2, "Rapid Evisceration": 2, "Slaanesh’s Chosen": 2, "Spectacle of Slaughter": 1, "Blood Legion": 2, "Cavalcade of Chaos": 1, "Daemonic Incursion": 3, "Legion of Excess": 2, "Lords of the Warp": 1, "Plague Legion": 2, "Scintillating Legion": 2, "Shadow Legion": 2, "Warptide": 1, "Bastions of Tyranny": 1, "Helhunt Lance": 2, "Houndpack Lance": 2, "Hunting Warpack": 1, "Iconoclast Fiefdom": 1, "Infernal Lance": 3, "Lords of Dread": 2, "Traitoris Lance": 2, "Armoured Warhost": 1, "Aspect Host": 3, "Corsair Coterie": 2, "Devoted of Ynnead": 2, "Eldritch Raiders": 2, "Fateful Performance": 1, "Ghosts of the Webway": 2, "Guardian Battlehost": 2, "Path of the Outcast": 1, "Seer Council": 2, "Serpent’s Brood": 2, "Spirit Conclave": 2, "Twilight Flickers": 1, "Warhost": 3, "Windrider Host": 2, "Covenite Coterie": 2, "Exhibition of Slaughter": 1, "Kabalite Agonysts": 1, "Kabalite Cartel": 2, "Realspace Raiders": 2, "Reaper’s Wager": 3, "Skysplinter Assault": 2, "Spectacle of Spite": 2, "Tools of Torment": 1, "Annihilation Legion": 2, "Awakened Dynasty": 3, "Canoptek Court": 3, "Cryptek Conclave": 2, "Cursed Legion": 2, "Hand of the Dynasty": 1, "Hypercrypt Legion": 2, "Obeisance Phalanx": 2, "Pantheon of Woe": 2, "Skyshroud Spearhead": 1, "Starshatter Arsenal": 3, "The Phaeron’s Armoury": 1, "Blitz Brigade": 2, "Bully Boyz": 2, "Da Big Hunt": 2, "Dread Mob": 2, "Freebooter Krew": 2, "Green Tide": 2, "Kult of Speed": 2, "More Dakka!": 1, "Rollin' Deff": 1, "Speedwaaagh!": 2, "Taktikal Brigade": 1, "War Horde": 3, "Advanced Acquisition Cadre": 1, "Auxiliary Cadre": 1, "Experimental Prototype Cadre": 1, "Kauyon": 2, "Kroot Hunting Pack": 2, "Mont’Ka": 3, "Retaliation Cadre": 2, "Ambush Predators": 1, "Assimilation Swarm": 2, "Crusher Stampede": 2, "Invasion Fleet": 3, "Subterranean Assault": 3, "Synaptic Nexus": 2, "Talons of the Norn Queen": 1, "Unending Swarm": 2, "Vanguard Onslaught": 2, "Warrior Bioform Onslaught": 1, "Biosanctic Broodsurge": 2, "Brood Brothers Auxilia": 2, "Final Day": 2, "Heroes of the Uprising": 1, "Host of Ascension": 3, "Outlander Claw": 2, "Purestrain Broodswarm": 1, "Xenocreed Congregation": 2, "Xenocult Masses": 1, "Armoured Trailblazers": 1, "Brandfast Oathband": 2, "Dêlve Assault Shift": 2, "Farseekers": 1, "Hearthband": 3, "Hearthfyre Arsenal": 2, "Hearthguard Covenant": 1, "Mercenary Oathband": 2, "Needgaârd Oathband": 2, "Persecution Prospect": 2};
   // === BSDATA:END ===
   const ALLEGIANCE_COLORS={"Space Marines":"#c8a84b","Imperium":"#7799cc","Chaos":"#cc3535","Xenos":"#4caf7d"};
+  const DISP_ABBR={"DISRUPTION":"DSRPT","PRIORITY ASSETS":"PRI.","PURGE THE FOE":"PURGE","RECONNAISSANCE":"RECON","TAKE AND HOLD":"T&H"};
+  function dispLabel(name){ const a=DISP_ABBR[name]||name; return `<span class="disp-full">${esc(name)}</span><span class="disp-abbr">${esc(a)}</span>`; }
   function allegianceColor(faction){
     for(const grp of FACTION_GROUPS){
       if(grp.f.includes(faction)) return ALLEGIANCE_COLORS[grp.g]||"#555";
@@ -1108,10 +1115,10 @@
     return `<div class="matchup-wrap"><table class="honours matchup-table">
       <thead><tr>
         <th class="matchup-corner">You ↓ / Opp →</th>
-        ${oppDisps.map(od=>`<th>${esc(od)}</th>`).join("")}
+        ${oppDisps.map(od=>`<th>${dispLabel(od)}</th>`).join("")}
       </tr></thead>
       <tbody>${yourDisps.map(yd=>`<tr>
-        <th>${esc(yd)}</th>
+        <th>${dispLabel(yd)}</th>
         ${oppDisps.map(od=>cell(yd,od)).join("")}
       </tr>`).join("")}</tbody>
     </table></div>`;
@@ -1415,6 +1422,7 @@
     }catch(e){}
     render();
   })();
+
 
 })();
 </script>
