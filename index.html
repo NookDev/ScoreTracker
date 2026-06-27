@@ -714,8 +714,9 @@
     const map={};
     base.forEach(g=>{
       if(mode==="detachment"){
-        const dets=g.youDetachments?.length?g.youDetachments:(g.youDetachment?[g.youDetachment]:["(no detachment)"]);
-        dets.forEach(d=>{ (map[d]=map[d]||[]).push(g); });
+        const dets=g.youDetachments?.length?g.youDetachments:(g.youDetachment?[g.youDetachment]:[]);
+        const key=dets.length?dets.join(" + "):"(no detachment)";
+        (map[key]=map[key]||[]).push(g);
       } else {
         const key=g.youFaction||"—";
         (map[key]=map[key]||[]).push(g);
