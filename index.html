@@ -430,6 +430,7 @@
   .matchup-win{color:var(--olive);font-weight:600}
   .matchup-loss{color:var(--oxide);font-weight:600}
   .matchup-empty{color:var(--bone-dim);opacity:.4}
+  .matchup-wr-hint{color:var(--bone-dim);font-size:10px;font-weight:400;letter-spacing:0}
   .disp-abbr{display:none}
   @media(max-width:540px){
     .matchup-table .disp-full{display:none}
@@ -1102,8 +1103,12 @@
       if(youDisp&&oppDisp) pairs.push({youDisp,oppDisp,g});
     });
     if(!pairs.length) return `<div class="empty"><div class="big">No matchup data</div>Both your and your opponent's detachment need to be set.</div>`;
-    const yourDisps=[...new Set(pairs.map(p=>p.youDisp))].sort();
     const oppDisps=[...new Set(pairs.map(p=>p.oppDisp))].sort();
+    const yourDisps=[...new Set(pairs.map(p=>p.youDisp))].sort((a,b)=>{
+      const sa=tally(pairs.filter(p=>p.youDisp===a).map(p=>p.g));
+      const sb=tally(pairs.filter(p=>p.youDisp===b).map(p=>p.g));
+      return sb.rate-sa.rate||sb.t-sa.t;
+    });
     const cell=(yd,od)=>{
       const gs=pairs.filter(p=>p.youDisp===yd&&p.oppDisp===od).map(p=>p.g);
       if(!gs.length) return `<td class="matchup-empty">—</td>`;
@@ -1117,10 +1122,13 @@
         <th class="matchup-corner">You ↓ / Opp →</th>
         ${oppDisps.map(od=>`<th>${dispLabel(od)}</th>`).join("")}
       </tr></thead>
-      <tbody>${yourDisps.map(yd=>`<tr>
-        <th>${dispLabel(yd)}</th>
-        ${oppDisps.map(od=>cell(yd,od)).join("")}
-      </tr>`).join("")}</tbody>
+      <tbody>${yourDisps.map(yd=>{
+        const s=tally(pairs.filter(p=>p.youDisp===yd).map(p=>p.g));
+        return `<tr>
+          <th>${dispLabel(yd)}<span class="matchup-wr-hint"> · ${s.rate}%</span></th>
+          ${oppDisps.map(od=>cell(yd,od)).join("")}
+        </tr>`;
+      }).join("")}</tbody>
     </table></div>`;
   }
 
