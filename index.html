@@ -422,6 +422,14 @@
     border-radius:2px;font-size:10px;padding:0 4px;margin-left:3px;font-weight:600;
   }
   .tg.on .tab-count{background:rgba(0,0,0,.2);color:inherit}
+  .sub-toggle-wrap{margin:0 0 10px;display:flex}
+  .matchup-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .matchup-table thead th,.matchup-table tbody th{white-space:nowrap;font-size:11px}
+  .matchup-table td{text-align:center;font-size:12px;white-space:nowrap}
+  .matchup-corner{font-size:10px;color:var(--bone-dim);font-weight:400;text-align:left!important}
+  .matchup-win{color:var(--olive);font-weight:600}
+  .matchup-loss{color:var(--oxide);font-weight:600}
+  .matchup-empty{color:var(--bone-dim);opacity:.4}
 
   .empty{
     text-align:center;padding:46px 20px;color:var(--bone-dim);
@@ -577,6 +585,7 @@
   let profile = { name:"", faction:"", detachment:"" };
   let lastOppName = "";
   let honoursMode = "faction";
+  let dispView = "yours";
   let filters = { you:"all", opp:"all", result:"all" };
   let editingId = null;
   let youDetCount = 1;
@@ -704,8 +713,13 @@
     });
     const map={};
     base.forEach(g=>{
-      const key = mode==="detachment" ? (g.youDetachments?.[0]||g.youDetachment||"(no detachment)") : (g.youFaction||"—");
-      (map[key]=map[key]||[]).push(g);
+      if(mode==="detachment"){
+        const dets=g.youDetachments?.length?g.youDetachments:(g.youDetachment?[g.youDetachment]:["(no detachment)"]);
+        dets.forEach(d=>{ (map[d]=map[d]||[]).push(g); });
+      } else {
+        const key=g.youFaction||"—";
+        (map[key]=map[key]||[]).push(g);
+      }
     });
     return Object.keys(map).map(k=>{
       const s=tally(map[k]); return { key:k, ...s };
@@ -1016,6 +1030,19 @@
 
   function renderDispositionTab(list){
     if(!games.length) return `<div class="empty"><div class="big">No engagements logged</div>Record your first battle above.</div>`;
+    const subToggle=`<div class="sub-toggle-wrap"><span class="toggle">
+      <button class="tg ${dispView==="yours"?"on":""}" data-dispview="yours">Your Disp</button>
+      <button class="tg ${dispView==="facing"?"on":""}" data-dispview="facing">Facing</button>
+      <button class="tg ${dispView==="matchup"?"on":""}" data-dispview="matchup">Matchup</button>
+    </span></div>`;
+    let content="";
+    if(dispView==="facing") content=renderDispFacing(list);
+    else if(dispView==="matchup") content=renderDispMatchup(list);
+    else content=renderDispYours(list);
+    return subToggle+content;
+  }
+
+  function renderDispYours(list){
     const map={};
     list.forEach(g=>{
       const dets=g.youDetachments?.length?g.youDetachments:(g.youDetachment?[g.youDetachment]:[]);
@@ -1026,7 +1053,7 @@
     const rows=Object.keys(map).map(k=>{ const s=tally(map[k]); return {key:k,...s}; }).sort((a,b)=>b.rate-a.rate||b.t-a.t);
     if(!rows.length) return `<div class="empty"><div class="big">No data</div>Games with recorded detachments will appear here.</div>`;
     return `<table class="honours">
-      <thead><tr><th>Disposition</th><th>Games</th><th>Record</th><th>Win&nbsp;Rate</th></tr></thead>
+      <thead><tr><th>Your Disposition</th><th>Games</th><th>Record</th><th>Win&nbsp;Rate</th></tr></thead>
       <tbody>${rows.map(r=>`<tr>
         <td>${esc(r.key)}</td>
         <td>${r.t}</td>
@@ -1034,6 +1061,59 @@
         <td class="wr">${r.rate}%</td>
       </tr>`).join("")}</tbody>
     </table>`;
+  }
+
+  function renderDispFacing(list){
+    const map={};
+    list.forEach(g=>{
+      const dets=g.oppDetachments?.length?g.oppDetachments:(g.oppDetachment?[g.oppDetachment]:[]);
+      const disp=g.oppDisposition||(dets.length===1?DISPOSITIONS[dets[0]]:null)||null;
+      const key=disp||"(unknown)";
+      (map[key]=map[key]||[]).push(g);
+    });
+    const rows=Object.keys(map).map(k=>{ const s=tally(map[k]); return {key:k,...s}; }).sort((a,b)=>b.rate-a.rate||b.t-a.t);
+    if(!rows.length) return `<div class="empty"><div class="big">No data</div>Games with recorded opponent detachments will appear here.</div>`;
+    return `<table class="honours">
+      <thead><tr><th>Opponent Disposition</th><th>Games</th><th>Record</th><th>Win&nbsp;Rate</th></tr></thead>
+      <tbody>${rows.map(r=>`<tr>
+        <td>${esc(r.key)}</td>
+        <td>${r.t}</td>
+        <td class="mini-rec">${r.w}–${r.l}–${r.d}</td>
+        <td class="wr">${r.rate}%</td>
+      </tr>`).join("")}</tbody>
+    </table>`;
+  }
+
+  function renderDispMatchup(list){
+    const pairs=[];
+    list.forEach(g=>{
+      const yd=g.youDetachments?.length?g.youDetachments:(g.youDetachment?[g.youDetachment]:[]);
+      const od=g.oppDetachments?.length?g.oppDetachments:(g.oppDetachment?[g.oppDetachment]:[]);
+      const youDisp=g.youDisposition||(yd.length===1?DISPOSITIONS[yd[0]]:null)||null;
+      const oppDisp=g.oppDisposition||(od.length===1?DISPOSITIONS[od[0]]:null)||null;
+      if(youDisp&&oppDisp) pairs.push({youDisp,oppDisp,g});
+    });
+    if(!pairs.length) return `<div class="empty"><div class="big">No matchup data</div>Both your and your opponent's detachment need to be set.</div>`;
+    const yourDisps=[...new Set(pairs.map(p=>p.youDisp))].sort();
+    const oppDisps=[...new Set(pairs.map(p=>p.oppDisp))].sort();
+    const cell=(yd,od)=>{
+      const gs=pairs.filter(p=>p.youDisp===yd&&p.oppDisp===od).map(p=>p.g);
+      if(!gs.length) return `<td class="matchup-empty">—</td>`;
+      const s=tally(gs);
+      const cls=s.rate>=60?"matchup-win":s.rate<=40?"matchup-loss":"";
+      const rec=s.d?`${s.w}–${s.l}–${s.d}`:`${s.w}–${s.l}`;
+      return `<td class="${cls}" title="${s.w}W ${s.l}L${s.d?" "+s.d+"D":""} · ${s.rate}% WR">${rec}</td>`;
+    };
+    return `<div class="matchup-wrap"><table class="honours matchup-table">
+      <thead><tr>
+        <th class="matchup-corner">You ↓ / Opp →</th>
+        ${oppDisps.map(od=>`<th>${esc(od)}</th>`).join("")}
+      </tr></thead>
+      <tbody>${yourDisps.map(yd=>`<tr>
+        <th>${esc(yd)}</th>
+        ${oppDisps.map(od=>cell(yd,od)).join("")}
+      </tr>`).join("")}</tbody>
+    </table></div>`;
   }
 
   function renderPlayerTab(list){
@@ -1149,8 +1229,11 @@
     wireDetSide("opp", oppDetCount);
 
     // Battle Honours mode toggle
-    document.querySelectorAll(".tg").forEach(b=>{
+    document.querySelectorAll(".tg[data-mode]").forEach(b=>{
       b.addEventListener("click",()=>{ honoursMode=b.getAttribute("data-mode"); render(); });
+    });
+    document.querySelectorAll(".tg[data-dispview]").forEach(b=>{
+      b.addEventListener("click",()=>{ dispView=b.getAttribute("data-dispview"); render(); });
     });
 
     // sync ID
