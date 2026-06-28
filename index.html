@@ -1293,16 +1293,17 @@
       location.reload();
     });
 
-    // auto-calc total from primary + secondary
-    function wireAutoCalc(priId, secId, totId){
-      const pri=document.getElementById(priId), sec=document.getElementById(secId), tot=document.getElementById(totId);
+    // auto-calc total from primary + secondary + paint bonus (10 pts if painted)
+    function wireAutoCalc(priId, secId, totId, paintedId){
+      const pri=document.getElementById(priId), sec=document.getElementById(secId), tot=document.getElementById(totId), painted=document.getElementById(paintedId);
       if(!pri||!sec||!tot) return;
-      function update(){ if(pri.value!==""||sec.value!=="") tot.value=(Number(pri.value)||0)+(Number(sec.value)||0); }
+      function update(){ if(pri.value!==""||sec.value!=="") tot.value=(Number(pri.value)||0)+(Number(sec.value)||0)+(painted&&painted.checked?10:0); }
       pri.addEventListener("input",update);
       sec.addEventListener("input",update);
+      if(painted) painted.addEventListener("change",update);
     }
-    wireAutoCalc("f-youPri","f-youSec","f-youS");
-    wireAutoCalc("f-oppPri","f-oppSec","f-oppS");
+    wireAutoCalc("f-youPri","f-youSec","f-youS","f-youPainted");
+    wireAutoCalc("f-oppPri","f-oppSec","f-oppS","f-oppPainted");
 
     // submit on Enter from score fields
     ["f-youS","f-oppS"].forEach(id=>{
