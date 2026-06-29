@@ -1422,18 +1422,19 @@
         localStorage.removeItem(k);
       }
     }
-    // unique visitor ping
-    try{
-      const vr=await fetch(`${API}?action=visit`,{headers:{"X-User-ID":USER_ID}});
-      const vd=await vr.json();
-      visitorCount=vd.count;
-      const vEl=document.getElementById("visitor-footer");
-      if(vEl&&visitorCount) vEl.innerHTML=`<p class="footnote" style="margin-top:6px">${visitorCount.toLocaleString()} commander${visitorCount===1?"":"s"} on record</p>`;
-    }catch(e){}
-    try{
-      const raw=await load(KEY);
-      if(raw){ games=JSON.parse(raw)||[]; }
-    }catch(e){ games=[]; }
+    // fetch games, profile, and visitor count in parallel
+    const [rawGames, rawProfile] = await Promise.all([
+      load(KEY).catch(()=>null),
+      load(PKEY).catch(()=>null),
+      fetch(`${API}?action=visit`,{headers:{"X-User-ID":USER_ID}})
+        .then(r=>r.json())
+        .then(vd=>{
+          visitorCount=vd.count;
+          const vEl=document.getElementById("visitor-footer");
+          if(vEl&&visitorCount) vEl.innerHTML=`<p class="footnote" style="margin-top:6px">${visitorCount.toLocaleString()} commander${visitorCount===1?"":"s"} on record</p>`;
+        }).catch(()=>null),
+    ]);
+    try{ if(rawGames){ games=JSON.parse(rawGames)||[]; } }catch(e){ games=[]; }
     // migrate old single-detachment records to arrays
     games=games.map(g=>({
       ...g,
@@ -1444,10 +1445,7 @@
     // seed last opponent name from most recent game that has one
     const lastWithOpp = [...games].reverse().find(g=>g.oppName);
     if(lastWithOpp) lastOppName = lastWithOpp.oppName;
-    try{
-      const p=await load(PKEY);
-      if(p){ profile=JSON.parse(p)||profile; }
-    }catch(e){}
+    try{ if(rawProfile){ profile=JSON.parse(rawProfile)||profile; } }catch(e){}
     render();
   })();
 
