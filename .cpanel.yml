@@ -9,3 +9,4 @@ deployment:
     - /bin/cp 192.png $DEPLOYPATH
     - /bin/cp 512.png $DEPLOYPATH
     - /bin/cp api.php $DEPLOYPATH
+    - /bin/cp -r fonts $DEPLOYPATH
