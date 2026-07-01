@@ -598,6 +598,9 @@
     <summary>Changelog</summary>
     <div class="entry-more-body" style="flex-direction:column;gap:6px;margin-top:10px;">
       <div style="font-family:'Oswald',sans-serif;font-size:10px;letter-spacing:.1em;color:var(--bone-dim);">
+        <span style="color:var(--brass);margin-right:8px;">2026-07-01</span>By Detachment: detachment order irrelevant, combos merged; sorted by DP cost
+      </div>
+      <div style="font-family:'Oswald',sans-serif;font-size:10px;letter-spacing:.1em;color:var(--bone-dim);">
         <span style="color:var(--brass);margin-right:8px;">2026-07-01</span>Battle Log can now be sorted by newest or oldest date
       </div>
       <div style="font-family:'Oswald',sans-serif;font-size:10px;letter-spacing:.1em;color:var(--bone-dim);">
@@ -816,16 +819,20 @@
     base.forEach(g=>{
       if(mode==="detachment"){
         const dets=g.youDetachments?.length?g.youDetachments:(g.youDetachment?[g.youDetachment]:[]);
-        const key=dets.length?dets.join(" + "):"(no detachment)";
+        const key=dets.length?dets.slice().sort().join(" + "):"(no detachment)";
         (map[key]=map[key]||[]).push(g);
       } else {
         const key=g.youFaction||"—";
         (map[key]=map[key]||[]).push(g);
       }
     });
-    return Object.keys(map).map(k=>{
-      const s=tally(map[k]); return { key:k, ...s };
-    }).sort((a,b)=> b.rate-a.rate || b.t-a.t);
+    const rows=Object.keys(map).map(k=>{
+      const s=tally(map[k]);
+      const dp=mode==="detachment"?k.split(" + ").reduce((s,d)=>s+(DP_COSTS[d]||0),0):null;
+      return { key:k, ...s, dp };
+    });
+    if(mode==="detachment") return rows.sort((a,b)=>a.dp-b.dp||b.rate-a.rate||b.t-a.t);
+    return rows.sort((a,b)=>b.rate-a.rate||b.t-a.t);
   }
 
   function factionsForFilter(picker){
