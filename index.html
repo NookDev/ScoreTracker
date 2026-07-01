@@ -1471,7 +1471,7 @@
       const idx=games.findIndex(g=>g.id===editingId);
       if(idx!==-1){
         games[idx]={...games[idx],
-          date:val("f-date")||today(),
+          date:val("f-date")||games[idx].date,
           youFaction:youF, youName:val("f-youN"), youDetachments,
           oppFaction:oppF, oppName:val("f-oppN"), oppDetachments,
           location:val("f-loc"), youScore:ys, oppScore:os, youFirst, youDeployedFirst, youPainted, oppPainted,
