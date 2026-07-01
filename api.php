@@ -40,7 +40,7 @@ if (!$validId) {
 // Fall back to sha256 on older runtimes (local MAMP PHP 7.4).
 define('RL_HASH_ALGO', in_array('xxh128', hash_algos(), true) ? 'xxh128' : 'sha256');
 
-$allowed = ['ledger:games', 'ledger:profile'];
+$allowed = ['ledger:games', 'ledger:profile', 'ledger:favLocations'];
 $dataDir = __DIR__ . '/ledger-data';
 
 if (!is_dir($dataDir)) {
@@ -330,6 +330,11 @@ if ($method === 'GET') {
             exit;
         }
         if ($key === 'ledger:profile' && !is_object($decoded)) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Bad request']);
+            exit;
+        }
+        if ($key === 'ledger:favLocations' && !is_array($decoded)) {
             http_response_code(400);
             echo json_encode(['error' => 'Bad request']);
             exit;
