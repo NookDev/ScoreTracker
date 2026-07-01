@@ -1560,6 +1560,13 @@
     if(!window.confirm("Remove this game from the ledger?")) return;
     games=games.filter(g=>g.id!==id);
     games.forEach((g,i)=>g._i=i);
+    const last=[...games].sort((a,b)=>(b.date||"").localeCompare(a.date||"")||b._i-a._i)[0];
+    if(last){
+      const dets=last.youDetachments?.length?last.youDetachments:[last.youDetachment].filter(Boolean);
+      profile={name:last.youName,faction:last.youFaction,detachment:dets[0]||"",detachments:dets};
+      youDetCount=Math.max(1,dets.length);
+      await save(PKEY, JSON.stringify(profile));
+    }
     await save(KEY, JSON.stringify(games));
     render();
   }
