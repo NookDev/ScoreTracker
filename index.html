@@ -1595,6 +1595,7 @@
     }));
     games.forEach((g,i)=>g._i=i); // stable secondary sort key
     try{ if(rawProfile){ profile=JSON.parse(rawProfile)||profile; } }catch(e){}
+    youDetCount=Math.max(1,profile.detachments?.length||1);
     render();
   })();
 
