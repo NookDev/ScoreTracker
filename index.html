@@ -714,7 +714,7 @@
     if(count>1) h+=`<button type="button" class="det-btn det-rem" data-side="${side}">Remove</button>`;
     h+=`<span id="dp-meter-${side}" class="dp-meter ${meterClass}">${usedDP}/3 DP</span>`;
     h+=`</div><div id="disp-${side}" class="disp-block"></div></div>`;
-    return h;
+    return `<div id="det-wrap-${side}">${h}</div>`;
   }
 
   function dispBlockHTML(side, count){
@@ -1266,6 +1266,30 @@
     </table>`;
   }
 
+  // Surgically re-render just the detachment fields for one side, preserving all other form values
+  function updateDetSection(side){
+    const count = side==="you" ? youDetCount : oppDetCount;
+    const fEl = document.getElementById(`f-${side}F`);
+    const faction = fEl ? fEl.value : "";
+    const dets = [0,1,2].slice(0,count).map(i=>{
+      const d = document.getElementById(`f-${side}Det-${i}`);
+      return d ? d.value : "";
+    });
+    const wrap = document.getElementById(`det-wrap-${side}`);
+    if(!wrap) return;
+    wrap.outerHTML = renderDetFields(side, faction, dets, count);
+    wireDetSide(side, count);
+    // re-attach add/rem listeners on the newly inserted buttons
+    document.querySelectorAll(`.det-add[data-side="${side}"],.det-rem[data-side="${side}"]`).forEach(b=>{
+      b.addEventListener("click",()=>{
+        const isAdd=b.classList.contains("det-add");
+        if(isAdd){ if(side==="you") youDetCount=Math.min(3,youDetCount+1); else oppDetCount=Math.min(3,oppDetCount+1); }
+        else { if(side==="you") youDetCount=Math.max(1,youDetCount-1); else oppDetCount=Math.max(1,oppDetCount-1); }
+        updateDetSection(side);
+      });
+    });
+  }
+
   // ---- events ----
   function wire(){
     // animate win-rate counter
@@ -1313,19 +1337,14 @@
     const cancelEdit=document.getElementById("btn-cancel-edit");
     if(cancelEdit) cancelEdit.addEventListener("click",()=>{ editingId=null; youDetCount=1; oppDetCount=1; render(); });
 
-    // det add/remove
-    document.querySelectorAll(".det-add").forEach(b=>{
+    // det add/remove — surgical update only, preserves all other form values
+    document.querySelectorAll(".det-add,.det-rem").forEach(b=>{
       b.addEventListener("click",()=>{
-        if(b.getAttribute("data-side")==="you") youDetCount=Math.min(3,youDetCount+1);
-        else oppDetCount=Math.min(3,oppDetCount+1);
-        render();
-      });
-    });
-    document.querySelectorAll(".det-rem").forEach(b=>{
-      b.addEventListener("click",()=>{
-        if(b.getAttribute("data-side")==="you") youDetCount=Math.max(1,youDetCount-1);
-        else oppDetCount=Math.max(1,oppDetCount-1);
-        render();
+        const side=b.getAttribute("data-side");
+        const isAdd=b.classList.contains("det-add");
+        if(isAdd){ if(side==="you") youDetCount=Math.min(3,youDetCount+1); else oppDetCount=Math.min(3,oppDetCount+1); }
+        else { if(side==="you") youDetCount=Math.max(1,youDetCount-1); else oppDetCount=Math.max(1,oppDetCount-1); }
+        updateDetSection(side);
       });
     });
 
