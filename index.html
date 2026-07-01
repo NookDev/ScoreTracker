@@ -1202,7 +1202,7 @@
       if(g.youPainted) moreFlags.push("My army painted");
       if(g.oppPainted) moreFlags.push("Opponent painted");
       const moreInfo=moreFlags.length
-        ?`<details class="entry-more"><summary>More Info</summary><div class="entry-more-body">${moreFlags.map(f=>`<span class="entry-flag">${f}</span>`).join("")}</div></details>`
+        ?`<details class="entry-more" open><summary>More Info</summary><div class="entry-more-body">${moreFlags.map(f=>`<span class="entry-flag">${f}</span>`).join("")}</div></details>`
         :"";
       return `
         <div class="entry" style="border-left-color:${allegianceColor(g.youFaction)}">
