@@ -396,6 +396,11 @@
   .entry .factions .v{color:var(--bone-dim);font-family:"Oswald";font-size:13px;margin:0 8px;letter-spacing:.1em}
   .entry .meta{font-size:13px;color:var(--bone-dim);margin-top:3px}
   .entry .meta .loc::before{content:"·";margin:0 7px}
+  .fav-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+  .fav-chip{display:inline-flex;align-items:center;gap:5px;background:var(--panel-2);border:1px solid var(--line);border-radius:3px;padding:3px 8px;font-size:11px;font-family:"Oswald",sans-serif;letter-spacing:.06em;cursor:pointer;color:var(--bone-dim);transition:border-color .15s,color .15s}
+  .fav-chip:hover{border-color:var(--brass);color:var(--bone)}
+  .fav-chip-del{background:none;border:none;color:var(--bone-dim);cursor:pointer;padding:0 0 0 2px;font-size:13px;line-height:1;opacity:.6}
+  .fav-chip-del:hover{color:var(--oxide);opacity:1}
   .entry .right{display:flex;align-items:center;gap:14px}
   .entry .right .btns{display:flex;gap:6px}
   @media(max-width:640px){
@@ -1009,11 +1014,11 @@
             </div>
             <div class="field">
               <label>Location <span class="opt">optional</span></label>
-              <datalist id="loc-fav-list">${favLocations.map(l=>`<option value="${esc(l)}"></option>`).join("")}</datalist>
               <div style="display:flex;gap:8px;align-items:center">
-                <input id="f-loc" list="loc-fav-list" placeholder="e.g. Tabletop Perth" value="${esc(eg?eg.location:"")}" autocomplete="off" autocapitalize="sentences" style="flex:1">
-                <button type="button" id="btn-fav-loc" class="btn-ghost" style="padding:6px 10px;white-space:nowrap;font-size:12px" title="Save to favourites">★</button>
+                <input id="f-loc" placeholder="e.g. Tabletop Perth" value="${esc(eg?eg.location:"")}" autocomplete="off" autocapitalize="sentences" style="flex:1">
+                <button type="button" id="btn-fav-loc" class="btn-ghost" style="padding:6px 10px;white-space:nowrap;font-size:12px" title="Save location to favourites">★ Save</button>
               </div>
+              ${favLocations.length?`<div class="fav-chips">${favLocations.map((l,i)=>`<span class="fav-chip" data-loc="${esc(l)}">${esc(l)}<button class="fav-chip-del" data-idx="${i}" type="button" title="Remove">×</button></span>`).join("")}</div>`:""}
             </div>
             <div class="field">
               <label>Terrain Layout <span class="opt">optional</span></label>
@@ -1442,6 +1447,22 @@
         render();
       }
     });
+    document.querySelectorAll(".fav-chip").forEach(chip=>{
+      chip.addEventListener("click",e=>{
+        if(e.target.classList.contains("fav-chip-del")) return;
+        const loc=document.getElementById("f-loc");
+        if(loc) loc.value=chip.getAttribute("data-loc");
+      });
+    });
+    document.querySelectorAll(".fav-chip-del").forEach(btn=>{
+      btn.addEventListener("click",async e=>{
+        e.stopPropagation();
+        const idx=parseInt(btn.getAttribute("data-idx"));
+        favLocations=favLocations.filter((_,i)=>i!==idx);
+        await save(FLKEY, JSON.stringify(favLocations));
+        render();
+      });
+    });
 
     // DP tracking + disposition display
     const _eg=editingId?games.find(g=>g.id===editingId):null;
@@ -1504,8 +1525,8 @@
       const calcTot=()=>{ tot.value=(Number(pri.value)||0)+(Number(sec.value)||0)+paint(); };
       const calcSec=()=>{ const v=Number(tot.value)-(Number(pri.value)||0)-paint(); sec.value=v>=0?v:""; };
       const calcPri=()=>{ const v=Number(tot.value)-(Number(sec.value)||0)-paint(); pri.value=v>=0?v:""; };
-      pri.addEventListener("input",()=>{ if(tot.value!==""&&sec.value==="") calcSec(); else { if(sec.value==="") sec.value=0; calcTot(); } });
-      sec.addEventListener("input",()=>{ if(tot.value!==""&&pri.value==="") calcPri(); else { if(pri.value==="") pri.value=0; calcTot(); } });
+      pri.addEventListener("input",()=>{ if(tot.value!=="") calcSec(); else { if(sec.value==="") sec.value=0; calcTot(); } });
+      sec.addEventListener("input",()=>{ if(tot.value!=="") calcPri(); else { if(pri.value==="") pri.value=0; calcTot(); } });
       tot.addEventListener("input",()=>{ if(pri.value!==""&&sec.value==="") calcSec(); else if(sec.value!==""&&pri.value==="") calcPri(); });
       if(painted) painted.addEventListener("change",()=>{ if(pri.value!==""&&sec.value!=="") calcTot(); else if(tot.value!==""&&pri.value!==""&&sec.value==="") calcSec(); else if(tot.value!==""&&sec.value!==""&&pri.value==="") calcPri(); });
     }
