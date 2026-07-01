@@ -692,7 +692,7 @@
 
   // ---- state ----
   let games = [];
-  let profile = { name:"", faction:"", detachment:"" };
+  let profile = { name:"", faction:"", detachment:"", disposition:"" };
   let honoursMode = "faction";
   let dispView = "yours";
   let logSort = "desc";
@@ -755,7 +755,7 @@
     return `<div id="det-wrap-${side}">${h}</div>`;
   }
 
-  function dispBlockHTML(side, count){
+  function dispBlockHTML(side, count, preferred=null){
     const selected=[0,1,2].slice(0,count).map(i=>{
       const el=document.getElementById(`f-${side}Det-${i}`);
       return el?el.value:"";
@@ -767,15 +767,19 @@
     const name=`disp-radio-${side}`;
     let h=`<div class="disp-radios">`;
     disps.forEach((d,i)=>{
-      h+=`<label class="disp-radio-lbl"><input type="radio" name="${name}" value="${esc(d)}"${i===0?" checked":""}> ${esc(d)}</label>`;
+      const checked=preferred&&disps.includes(preferred)?d===preferred:i===0;
+      h+=`<label class="disp-radio-lbl"><input type="radio" name="${name}" value="${esc(d)}"${checked?" checked":""}> ${esc(d)}</label>`;
     });
     return h+`</div>`;
   }
 
   function wireDetSide(side, count){
+    let initial=true;
+    const preferred=side==="you"?profile.disposition||null:null;
     function updateDisp(){
       const el=document.getElementById(`disp-${side}`);
-      if(el) el.innerHTML=dispBlockHTML(side,count);
+      if(el) el.innerHTML=dispBlockHTML(side,count,initial?preferred:null);
+      initial=false;
     }
     function updateDP(){
       let used=0;
@@ -1549,7 +1553,7 @@
     games.push(g);
     games.forEach((g,i)=>g._i=i);
     oppDetCount=1;
-    profile={ name:g.youName, faction:g.youFaction, detachment:youDetachments[0]||"", detachments:youDetachments };
+    profile={ name:g.youName, faction:g.youFaction, detachment:youDetachments[0]||"", detachments:youDetachments, disposition:youDisposition||"" };
     youDetCount=Math.max(1,profile.detachments?.length||1);
     await save(KEY, JSON.stringify(games));
     await save(PKEY, JSON.stringify(profile));
@@ -1563,7 +1567,7 @@
     const last=[...games].sort((a,b)=>(b.date||"").localeCompare(a.date||"")||b._i-a._i)[0];
     if(last){
       const dets=last.youDetachments?.length?last.youDetachments:[last.youDetachment].filter(Boolean);
-      profile={name:last.youName,faction:last.youFaction,detachment:dets[0]||"",detachments:dets};
+      profile={name:last.youName,faction:last.youFaction,detachment:dets[0]||"",detachments:dets,disposition:last.youDisposition||""};
       youDetCount=Math.max(1,dets.length);
       await save(PKEY, JSON.stringify(profile));
     }
