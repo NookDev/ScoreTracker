@@ -43,10 +43,6 @@
   html,body{margin:0}
   body{
     background-color:#0f0f0f;
-    background-image:linear-gradient(rgba(0,0,0,0.55),rgba(0,0,0,0.55)),url('armageddon-bg.jpg');
-    background-size:cover;
-    background-position:center;
-    background-attachment:fixed;
     color:var(--bone);
     font-family:"Barlow",system-ui,sans-serif;
     font-size:16px;
@@ -54,7 +50,19 @@
     -webkit-font-smoothing:antialiased;
     padding:0 0 80px;
   }
+  body::before{
+    content:'';
+    position:fixed;
+    inset:0;
+    background-image:linear-gradient(rgba(0,0,0,0.55),rgba(0,0,0,0.55)),url('armageddon-bg.jpg');
+    background-size:cover;
+    background-position:center;
+    filter:blur(6px);
+    transform:scale(1.04);
+    z-index:-1;
+  }
   .wrap{max-width:980px;margin:0 auto;padding:18px 24px 24px;background:rgba(15,15,15,0.82);min-height:100vh}
+  @media(min-width:980px){.wrap{zoom:1.25;max-width:784px}}
 
   /* ---------- Masthead ---------- */
   .masthead{
@@ -590,6 +598,12 @@
     <summary>Changelog</summary>
     <div class="entry-more-body" style="flex-direction:column;gap:6px;margin-top:10px;">
       <div style="font-family:'Oswald',sans-serif;font-size:10px;letter-spacing:.1em;color:var(--bone-dim);">
+        <span style="color:var(--brass);margin-right:8px;">2026-07-01</span>Desktop layout scaled up 125%; background image blur added
+      </div>
+      <div style="font-family:'Oswald',sans-serif;font-size:10px;letter-spacing:.1em;color:var(--bone-dim);">
+        <span style="color:var(--brass);margin-right:8px;">2026-07-01</span>Name and location fields now auto-capitalise the first letter
+      </div>
+      <div style="font-family:'Oswald',sans-serif;font-size:10px;letter-spacing:.1em;color:var(--bone-dim);">
         <span style="color:var(--brass);margin-right:8px;">2026-07-01</span>Fix: editing a game entry no longer resets the date to today
       </div>
       <div style="font-family:'Oswald',sans-serif;font-size:10px;letter-spacing:.1em;color:var(--bone-dim);">
@@ -894,7 +908,7 @@
                   ${renderDetFields("you", eg?eg.youFaction:profile.faction, eg?eg.youDetachments||(eg.youDetachment?[eg.youDetachment]:[]):profile.detachments||[profile.detachment].filter(Boolean), youDetCount)}
                   <div class="field">
                     <label>Player <span class="opt">optional</span></label>
-                    <input id="f-youN" placeholder="You" value="${esc(eg?eg.youName:profile.name)}" autocomplete="off">
+                    <input id="f-youN" placeholder="You" value="${esc(eg?eg.youName:profile.name)}" autocomplete="off" autocapitalize="sentences">
                   </div>
                   <div class="field">
                     <label>Your Score</label>
@@ -927,7 +941,7 @@
                   ${renderDetFields("opp", eg?eg.oppFaction:"", eg?eg.oppDetachments||(eg.oppDetachment?[eg.oppDetachment]:[]):[], oppDetCount)}
                   <div class="field">
                     <label>Player <span class="opt">optional</span></label>
-                    <input id="f-oppN" placeholder="Opponent" value="${esc(eg?eg.oppName:lastOppName)}" autocomplete="off">
+                    <input id="f-oppN" placeholder="Opponent" value="${esc(eg?eg.oppName:lastOppName)}" autocomplete="off" autocapitalize="sentences">
                   </div>
                   <div class="field">
                     <label>Their Score</label>
@@ -956,7 +970,7 @@
             </div>
             <div class="field">
               <label>Location <span class="opt">optional</span></label>
-              <input id="f-loc" placeholder="e.g. Tabletop Perth" value="${esc(eg?eg.location:"")}" autocomplete="off">
+              <input id="f-loc" placeholder="e.g. Tabletop Perth" value="${esc(eg?eg.location:"")}" autocomplete="off" autocapitalize="sentences">
             </div>
             <div class="check-field" style="gap:22px;flex-wrap:wrap;">
               <span style="display:flex;align-items:center;gap:10px;">
@@ -1007,6 +1021,8 @@
       </section>
 
       ${renderHonours()}
+
+      <div style="border-top:1px solid var(--brass);opacity:.25;margin:64px 0 48px"></div>
 
       <section class="sec">
         <div class="sec-head"><h2>Battle Log</h2><span class="hint">${filtered.length} shown</span></div>
@@ -1359,6 +1375,12 @@
     if(yf) yf.addEventListener("change",()=>{[0,1,2].forEach(i=>{const d=document.getElementById(`f-youDet-${i}`);if(d)d.innerHTML=detachmentOptions(yf.value,"");});const db=document.getElementById("disp-you");if(db)db.innerHTML="";const m=document.getElementById("dp-meter-you");if(m){m.textContent="0/3 DP";m.className="dp-meter";}});
     const of=document.getElementById("f-oppF");
     if(of) of.addEventListener("change",()=>{[0,1,2].forEach(i=>{const d=document.getElementById(`f-oppDet-${i}`);if(d)d.innerHTML=detachmentOptions(of.value,"");});const db=document.getElementById("disp-opp");if(db)db.innerHTML="";const m=document.getElementById("dp-meter-opp");if(m){m.textContent="0/3 DP";m.className="dp-meter";}});
+
+    // Auto-capitalise first letter of text inputs
+    ["f-youN","f-oppN","f-loc"].forEach(id=>{
+      const el=document.getElementById(id);
+      if(el) el.addEventListener("input",()=>{ if(el.value) el.value=el.value.charAt(0).toUpperCase()+el.value.slice(1); });
+    });
 
     // DP tracking + disposition display
     wireDetSide("you", youDetCount);
