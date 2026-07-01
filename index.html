@@ -598,6 +598,9 @@
     <summary>Changelog</summary>
     <div class="entry-more-body" style="flex-direction:column;gap:6px;margin-top:10px;">
       <div style="font-family:'Oswald',sans-serif;font-size:10px;letter-spacing:.1em;color:var(--bone-dim);">
+        <span style="color:var(--brass);margin-right:8px;">2026-07-01</span>Score fields auto-calc: entering any sub-score fills the other and total
+      </div>
+      <div style="font-family:'Oswald',sans-serif;font-size:10px;letter-spacing:.1em;color:var(--bone-dim);">
         <span style="color:var(--brass);margin-right:8px;">2026-07-01</span>By Detachment: detachment order irrelevant, combos merged; sorted by DP cost
       </div>
       <div style="font-family:'Oswald',sans-serif;font-size:10px;letter-spacing:.1em;color:var(--bone-dim);">
@@ -1449,14 +1452,18 @@
       location.reload();
     });
 
-    // auto-calc total from primary + secondary + paint bonus (10 pts if painted)
+    // auto-calc scores: pri+sec→total, total+pri→sec, total+sec→pri (paint bonus aware)
     function wireAutoCalc(priId, secId, totId, paintedId){
       const pri=document.getElementById(priId), sec=document.getElementById(secId), tot=document.getElementById(totId), painted=document.getElementById(paintedId);
       if(!pri||!sec||!tot) return;
-      function update(){ if(pri.value!==""||sec.value!=="") tot.value=(Number(pri.value)||0)+(Number(sec.value)||0)+(painted&&painted.checked?10:0); }
-      pri.addEventListener("input",update);
-      sec.addEventListener("input",update);
-      if(painted) painted.addEventListener("change",update);
+      const paint=()=>painted&&painted.checked?10:0;
+      const calcTot=()=>{ tot.value=(Number(pri.value)||0)+(Number(sec.value)||0)+paint(); };
+      const calcSec=()=>{ const v=Number(tot.value)-(Number(pri.value)||0)-paint(); sec.value=v>=0?v:""; };
+      const calcPri=()=>{ const v=Number(tot.value)-(Number(sec.value)||0)-paint(); pri.value=v>=0?v:""; };
+      pri.addEventListener("input",()=>{ if(tot.value!==""&&sec.value==="") calcSec(); else { if(sec.value==="") sec.value=0; calcTot(); } });
+      sec.addEventListener("input",()=>{ if(tot.value!==""&&pri.value==="") calcPri(); else { if(pri.value==="") pri.value=0; calcTot(); } });
+      tot.addEventListener("input",()=>{ if(pri.value!==""&&sec.value==="") calcSec(); else if(sec.value!==""&&pri.value==="") calcPri(); });
+      if(painted) painted.addEventListener("change",()=>{ if(pri.value!==""&&sec.value!=="") calcTot(); else if(tot.value!==""&&pri.value!==""&&sec.value==="") calcSec(); else if(tot.value!==""&&sec.value!==""&&pri.value==="") calcPri(); });
     }
     wireAutoCalc("f-youPri","f-youSec","f-youS","f-youPainted");
     wireAutoCalc("f-oppPri","f-oppSec","f-oppS","f-oppPainted");
