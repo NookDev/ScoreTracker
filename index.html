@@ -1535,6 +1535,7 @@
       youDisposition, oppDisposition
     };
     games.push(g);
+    games.forEach((g,i)=>g._i=i);
     youDetCount=1; oppDetCount=1;
     profile={ name:g.youName, faction:g.youFaction, detachment:youDetachments[0]||"", detachments:youDetachments };
     if(g.oppName) lastOppName = g.oppName;
@@ -1546,6 +1547,7 @@
   async function delGame(id){
     if(!window.confirm("Remove this game from the ledger?")) return;
     games=games.filter(g=>g.id!==id);
+    games.forEach((g,i)=>g._i=i);
     await save(KEY, JSON.stringify(games));
     render();
   }
