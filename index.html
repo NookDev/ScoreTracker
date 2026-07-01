@@ -721,6 +721,7 @@
   let honoursMode = "faction";
   let dispView = "yours";
   let logSort = "desc";
+  let moreStatsOpen = true;
   let filters = { you:"all", opp:"all", result:"all" };
   let editingId = null;
   let youDetCount = 1;
@@ -917,7 +918,7 @@
       </div>
       <div class="total-line"><b>${s.t}</b> game${s.t===1?"":"s"} ${filterActive?"in current view":"on record"}</div>
       ${filtered.length?`
-      <details class="more-stats">
+      <details class="more-stats" id="more-stats-panel"${moreStatsOpen?" open":""}>
         <summary>More Stats</summary>
         <div class="more-stats-body">
           <div class="ms-stat">
@@ -1487,6 +1488,10 @@
     const _eg=editingId?games.find(g=>g.id===editingId):null;
     wireDetSide("you", youDetCount, _eg?_eg.youDisposition:profile.disposition||null);
     wireDetSide("opp", oppDetCount, _eg?_eg.oppDisposition:null);
+
+    // More Stats open/close memory
+    const msp=document.getElementById("more-stats-panel");
+    if(msp) msp.addEventListener("toggle",()=>{ moreStatsOpen=msp.open; });
 
     // Battle Honours mode toggle
     document.querySelectorAll(".tg[data-mode]").forEach(b=>{
