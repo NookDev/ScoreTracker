@@ -598,6 +598,9 @@
     <summary>Changelog</summary>
     <div class="entry-more-body" style="flex-direction:column;gap:6px;margin-top:10px;">
       <div style="font-family:'Oswald',sans-serif;font-size:10px;letter-spacing:.1em;color:var(--bone-dim);">
+        <span style="color:var(--brass);margin-right:8px;">2026-07-01</span>Battle Log can now be sorted by newest or oldest date
+      </div>
+      <div style="font-family:'Oswald',sans-serif;font-size:10px;letter-spacing:.1em;color:var(--bone-dim);">
         <span style="color:var(--brass);margin-right:8px;">2026-07-01</span>Added visual divider between Battle Honours and Battle Log sections
       </div>
       <div style="font-family:'Oswald',sans-serif;font-size:10px;letter-spacing:.1em;color:var(--bone-dim);">
@@ -681,6 +684,7 @@
   let lastOppName = "";
   let honoursMode = "faction";
   let dispView = "yours";
+  let logSort = "desc";
   let filters = { you:"all", opp:"all", result:"all" };
   let editingId = null;
   let youDetCount = 1;
@@ -1028,7 +1032,7 @@
       <div style="border-top:1px solid var(--brass);opacity:.25;margin:64px 0 48px"></div>
 
       <section class="sec">
-        <div class="sec-head"><h2>Battle Log</h2><span class="hint">${filtered.length} shown</span></div>
+        <div class="sec-head"><h2>Battle Log</h2><span class="hint">${filtered.length} shown &nbsp;<button id="btn-log-sort" class="btn-ghost" style="font-size:11px;padding:4px 8px">${logSort==="desc"?"↓ Newest":"↑ Oldest"}</button></span></div>
         ${renderLedger(filtered)}
       </section>
 
@@ -1109,7 +1113,7 @@
     if(!list.length){
       return `<div class="empty"><div class="big">No games match these filters</div>Adjust or clear the filters to see your record.</div>`;
     }
-    const sorted = list.slice().sort((a,b)=> (b.date||"").localeCompare(a.date||"") || (b._i-a._i));
+    const sorted = list.slice().sort((a,b)=> logSort==="desc" ? ((b.date||"").localeCompare(a.date||"")||b._i-a._i) : ((a.date||"").localeCompare(b.date||"")||a._i-b._i));
     return `<div class="ledger">${sorted.map(g=>{
       const r=resultOf(g);
       const rLabel = r==="win"?"Win":r==="loss"?"Loss":"Draw";
@@ -1338,6 +1342,7 @@
     const fo=document.getElementById("flt-opp"); if(fo) fo.addEventListener("change",e=>{filters.opp=e.target.value;render();});
     const fr=document.getElementById("flt-res"); if(fr) fr.addEventListener("change",e=>{filters.result=e.target.value;render();});
     const cf=document.getElementById("clear-filters"); if(cf) cf.addEventListener("click",()=>{filters={you:"all",opp:"all",result:"all"};render();});
+    const ls=document.getElementById("btn-log-sort"); if(ls) ls.addEventListener("click",()=>{logSort=logSort==="desc"?"asc":"desc";render();});
 
     document.querySelectorAll(".honours tr.clickable").forEach(tr=>{
       tr.addEventListener("click",()=>{
