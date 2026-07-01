@@ -660,6 +660,7 @@
   // ---- storage ----
   const KEY  = "ledger:games";
   const PKEY = "ledger:profile";
+  const FLKEY = "ledger:favLocations";
   const API  = "api.php";
 
   // Each visitor gets a persistent short ID — their private data key
@@ -698,6 +699,7 @@
 
   // ---- state ----
   let games = [];
+  let favLocations = [];
   let profile = { name:"", faction:"", detachment:"", disposition:"" };
   let honoursMode = "faction";
   let dispView = "yours";
@@ -1001,7 +1003,11 @@
             </div>
             <div class="field">
               <label>Location <span class="opt">optional</span></label>
-              <input id="f-loc" placeholder="e.g. Tabletop Perth" value="${esc(eg?eg.location:"")}" autocomplete="off" autocapitalize="sentences">
+              ${favLocations.length?`<select id="f-loc-fav" style="margin-bottom:6px"><option value="">— Pick a favourite —</option>${favLocations.map(l=>`<option value="${esc(l)}"${(eg?eg.location:"")===l?" selected":""}>${esc(l)}</option>`).join("")}</select>`:""}
+              <div style="display:flex;gap:8px;align-items:center">
+                <input id="f-loc" placeholder="e.g. Tabletop Perth" value="${esc(eg?eg.location:"")}" autocomplete="off" autocapitalize="sentences" style="flex:1">
+                <button type="button" id="btn-fav-loc" class="btn-ghost" style="padding:6px 10px;white-space:nowrap;font-size:12px" title="Save to favourites">★</button>
+              </div>
             </div>
             <div class="check-field" style="gap:22px;flex-wrap:wrap;">
               <span style="display:flex;align-items:center;gap:10px;">
@@ -1414,6 +1420,21 @@
       if(el) el.addEventListener("input",()=>{ if(el.value) el.value=el.value.charAt(0).toUpperCase()+el.value.slice(1); });
     });
 
+    // Favourite locations
+    const favSel=document.getElementById("f-loc-fav");
+    if(favSel) favSel.addEventListener("change",()=>{ const loc=document.getElementById("f-loc"); if(loc&&favSel.value) loc.value=favSel.value; });
+    const favBtn=document.getElementById("btn-fav-loc");
+    if(favBtn) favBtn.addEventListener("click",async()=>{
+      const loc=document.getElementById("f-loc");
+      const v=loc?loc.value.trim():"";
+      if(!v) return;
+      if(!favLocations.includes(v)){
+        favLocations=[...favLocations,v].sort();
+        await save(FLKEY, JSON.stringify(favLocations));
+        render();
+      }
+    });
+
     // DP tracking + disposition display
     const _eg=editingId?games.find(g=>g.id===editingId):null;
     wireDetSide("you", youDetCount, _eg?_eg.youDisposition:profile.disposition||null);
@@ -1592,9 +1613,10 @@
       }
     }
     // fetch games, profile, and visitor count in parallel
-    const [rawGames, rawProfile] = await Promise.all([
+    const [rawGames, rawProfile, rawFavLoc] = await Promise.all([
       load(KEY).catch(()=>null),
       load(PKEY).catch(()=>null),
+      load(FLKEY).catch(()=>null),
       fetch(`${API}?action=visit`,{headers:{"X-User-ID":USER_ID}})
         .then(r=>r.json())
         .then(vd=>{
@@ -1612,6 +1634,7 @@
     }));
     games.forEach((g,i)=>g._i=i); // stable secondary sort key
     try{ if(rawProfile){ profile=JSON.parse(rawProfile)||profile; } }catch(e){}
+    try{ if(rawFavLoc){ favLocations=JSON.parse(rawFavLoc)||[]; } }catch(e){}
     youDetCount=Math.max(1,profile.detachments?.length||1);
     render();
   })();
