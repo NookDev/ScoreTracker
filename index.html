@@ -160,6 +160,42 @@
   .turn-line .tl-label{color:var(--bone-dim)}
   .turn-line .tl-rate{color:var(--brass-bright);font-family:"Cinzel",serif;font-size:14px;font-weight:600}
   .turn-line .tl-rec{color:var(--bone-dim);font-size:11px}
+  /* ---------- More Stats dropdown ---------- */
+  .more-stats{
+    margin:8px 0 0;
+    border:1px solid var(--line);border-radius:3px;
+    background:var(--panel);overflow:hidden;
+  }
+  .more-stats summary{
+    list-style:none;cursor:pointer;
+    display:flex;align-items:center;gap:7px;
+    font-family:"Oswald",sans-serif;text-transform:uppercase;letter-spacing:.18em;
+    font-size:11px;color:var(--bone-dim);padding:9px 14px;user-select:none;
+  }
+  .more-stats summary::-webkit-details-marker{display:none}
+  .more-stats summary::before{content:"▶";font-size:7px;transition:transform .15s;display:inline-block;flex-shrink:0}
+  .more-stats[open] summary::before{transform:rotate(90deg)}
+  .more-stats-body{
+    display:grid;grid-template-columns:repeat(5,1fr);
+    border-top:1px solid var(--line);
+  }
+  @media(max-width:640px){.more-stats-body{grid-template-columns:repeat(3,1fr)}}
+  @media(max-width:400px){.more-stats-body{grid-template-columns:repeat(2,1fr)}}
+  .ms-stat{
+    padding:11px 8px;text-align:center;
+    border-right:1px solid var(--line);
+  }
+  .ms-stat:last-child{border-right:none}
+  .ms-stat .ms-val{
+    font-family:"Cinzel",serif;font-weight:600;font-size:20px;line-height:1;
+    color:var(--brass-bright);
+  }
+  .ms-stat .ms-lbl{
+    font-family:"Oswald",sans-serif;text-transform:uppercase;letter-spacing:.13em;
+    font-size:10px;color:var(--bone-dim);margin-top:5px;
+  }
+  .ms-stat .ms-sub{font-size:10px;color:var(--bone-dim);font-family:"Oswald",sans-serif;letter-spacing:.04em;margin-top:3px}
+
   .nemesis-line{
     display:flex;align-items:center;justify-content:center;gap:10px;
     margin:10px 0 0;padding:8px 16px;
@@ -780,6 +816,11 @@
     const s = tally(filtered);
     const ts = turnTally(filtered);
     const eg = editingId ? games.find(g=>g.id===editingId) : null;
+    const _wins = filtered.filter(g=>resultOf(g)==="win");
+    const _losses = filtered.filter(g=>resultOf(g)==="loss");
+    const avgPts = filtered.length ? (filtered.reduce((a,g)=>a+g.youScore,0)/filtered.length).toFixed(1) : null;
+    const avgDiffWin = _wins.length ? (_wins.reduce((a,g)=>a+(g.youScore-g.oppScore),0)/_wins.length).toFixed(1) : null;
+    const avgDiffLoss = _losses.length ? (_losses.reduce((a,g)=>a+(g.youScore-g.oppScore),0)/_losses.length).toFixed(1) : null;
     const youOpts = factionsForFilter("you");
     const oppOpts = factionsForFilter("opp");
     const filterActive = filters.you!=="all"||filters.opp!=="all"||filters.result!=="all";
@@ -799,11 +840,35 @@
         </div>
       </div>
       <div class="total-line"><b>${s.t}</b> game${s.t===1?"":"s"} ${filterActive?"in current view":"on record"}</div>
-      ${(ts.first.t||ts.second.t)?`
-      <div class="turn-line">
-        <div class="tl-item"><span class="tl-label">1st Turn</span><span class="tl-rate">${ts.first.t?ts.first.rate+"%":"—"}</span><span class="tl-rec">${ts.first.t?ts.first.w+"W·"+ts.first.l+"L·"+ts.first.d+"D":""}</span></div>
-        <div class="tl-item"><span class="tl-label">2nd Turn</span><span class="tl-rate">${ts.second.t?ts.second.rate+"%":"—"}</span><span class="tl-rec">${ts.second.t?ts.second.w+"W·"+ts.second.l+"L·"+ts.second.d+"D":""}</span></div>
-      </div>`:""}
+      ${filtered.length?`
+      <details class="more-stats">
+        <summary>More Stats</summary>
+        <div class="more-stats-body">
+          <div class="ms-stat">
+            <div class="ms-val">${ts.first.t?ts.first.rate+"%":"—"}</div>
+            <div class="ms-lbl">1st Turn</div>
+            ${ts.first.t?`<div class="ms-sub">${ts.first.w}W·${ts.first.l}L·${ts.first.d}D</div>`:""}
+          </div>
+          <div class="ms-stat">
+            <div class="ms-val">${ts.second.t?ts.second.rate+"%":"—"}</div>
+            <div class="ms-lbl">2nd Turn</div>
+            ${ts.second.t?`<div class="ms-sub">${ts.second.w}W·${ts.second.l}L·${ts.second.d}D</div>`:""}
+          </div>
+          <div class="ms-stat">
+            <div class="ms-val">${avgPts!==null?avgPts:"—"}</div>
+            <div class="ms-lbl">Avg Points</div>
+          </div>
+          <div class="ms-stat">
+            <div class="ms-val" style="${avgDiffWin!==null?"color:var(--olive)":""}">${avgDiffWin!==null?(+avgDiffWin>=0?"+":"")+avgDiffWin:"—"}</div>
+            <div class="ms-lbl">Avg Diff (W)</div>
+          </div>
+          <div class="ms-stat">
+            <div class="ms-val" style="${avgDiffLoss!==null?"color:var(--oxide)":""}">${avgDiffLoss!==null?(+avgDiffLoss>0?"+":"")+avgDiffLoss:"—"}</div>
+            <div class="ms-lbl">Avg Diff (L)</div>
+          </div>
+        </div>
+      </details>`:""}
+
 
       <section class="sec">
         <div class="sec-head"><h2>${eg?"Edit Engagement":"Log an Engagement"}</h2></div>
