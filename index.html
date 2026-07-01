@@ -598,6 +598,12 @@
     <summary>Changelog</summary>
     <div class="entry-more-body" style="flex-direction:column;gap:6px;margin-top:10px;">
       <div style="font-family:'Oswald',sans-serif;font-size:10px;letter-spacing:.1em;color:var(--bone-dim);">
+        <span style="color:var(--brass);margin-right:8px;">2026-07-01</span>Form now prefills correct number of detachment slots from last game
+      </div>
+      <div style="font-family:'Oswald',sans-serif;font-size:10px;letter-spacing:.1em;color:var(--bone-dim);">
+        <span style="color:var(--brass);margin-right:8px;">2026-07-01</span>Opponent name no longer prefills; your faction and detachments still do
+      </div>
+      <div style="font-family:'Oswald',sans-serif;font-size:10px;letter-spacing:.1em;color:var(--bone-dim);">
         <span style="color:var(--brass);margin-right:8px;">2026-07-01</span>Score fields auto-calc: entering any sub-score fills the other and total
       </div>
       <div style="font-family:'Oswald',sans-serif;font-size:10px;letter-spacing:.1em;color:var(--bone-dim);">
@@ -687,7 +693,6 @@
   // ---- state ----
   let games = [];
   let profile = { name:"", faction:"", detachment:"" };
-  let lastOppName = "";
   let honoursMode = "faction";
   let dispView = "yours";
   let logSort = "desc";
@@ -958,7 +963,7 @@
                   ${renderDetFields("opp", eg?eg.oppFaction:"", eg?eg.oppDetachments||(eg.oppDetachment?[eg.oppDetachment]:[]):[], oppDetCount)}
                   <div class="field">
                     <label>Player <span class="opt">optional</span></label>
-                    <input id="f-oppN" placeholder="Opponent" value="${esc(eg?eg.oppName:lastOppName)}" autocomplete="off" autocapitalize="sentences">
+                    <input id="f-oppN" placeholder="Opponent" value="${esc(eg?eg.oppName:"")}" autocomplete="off" autocapitalize="sentences">
                   </div>
                   <div class="field">
                     <label>Their Score</label>
@@ -1543,9 +1548,9 @@
     };
     games.push(g);
     games.forEach((g,i)=>g._i=i);
-    youDetCount=1; oppDetCount=1;
+    oppDetCount=1;
     profile={ name:g.youName, faction:g.youFaction, detachment:youDetachments[0]||"", detachments:youDetachments };
-    if(g.oppName) lastOppName = g.oppName;
+    youDetCount=Math.max(1,profile.detachments?.length||1);
     await save(KEY, JSON.stringify(games));
     await save(PKEY, JSON.stringify(profile));
     render();
@@ -1589,9 +1594,6 @@
       oppDetachments:g.oppDetachments||(g.oppDetachment?[g.oppDetachment]:[]),
     }));
     games.forEach((g,i)=>g._i=i); // stable secondary sort key
-    // seed last opponent name from most recent game that has one
-    const lastWithOpp = [...games].reverse().find(g=>g.oppName);
-    if(lastWithOpp) lastOppName = lastWithOpp.oppName;
     try{ if(rawProfile){ profile=JSON.parse(rawProfile)||profile; } }catch(e){}
     render();
   })();
