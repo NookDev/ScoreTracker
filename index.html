@@ -776,12 +776,11 @@
     return h+`</div>`;
   }
 
-  function wireDetSide(side, count){
+  function wireDetSide(side, count, preferredDisp=null){
     let initial=true;
-    const preferred=side==="you"?profile.disposition||null:null;
     function updateDisp(){
       const el=document.getElementById(`disp-${side}`);
-      if(el) el.innerHTML=dispBlockHTML(side,count,initial?preferred:null);
+      if(el) el.innerHTML=dispBlockHTML(side,count,initial?preferredDisp:null);
       initial=false;
     }
     function updateDP(){
@@ -1413,8 +1412,9 @@
     });
 
     // DP tracking + disposition display
-    wireDetSide("you", youDetCount);
-    wireDetSide("opp", oppDetCount);
+    const _eg=editingId?games.find(g=>g.id===editingId):null;
+    wireDetSide("you", youDetCount, _eg?_eg.youDisposition:profile.disposition||null);
+    wireDetSide("opp", oppDetCount, _eg?_eg.oppDisposition:null);
 
     // Battle Honours mode toggle
     document.querySelectorAll(".tg[data-mode]").forEach(b=>{
