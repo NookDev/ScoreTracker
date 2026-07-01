@@ -598,6 +598,9 @@
     <summary>Changelog</summary>
     <div class="entry-more-body" style="flex-direction:column;gap:6px;margin-top:10px;">
       <div style="font-family:'Oswald',sans-serif;font-size:10px;letter-spacing:.1em;color:var(--bone-dim);">
+        <span style="color:var(--brass);margin-right:8px;">2026-07-01</span>Added terrain layout number field to game form
+      </div>
+      <div style="font-family:'Oswald',sans-serif;font-size:10px;letter-spacing:.1em;color:var(--bone-dim);">
         <span style="color:var(--brass);margin-right:8px;">2026-07-01</span>Location field now supports saving and picking favourite venues
       </div>
       <div style="font-family:'Oswald',sans-serif;font-size:10px;letter-spacing:.1em;color:var(--bone-dim);">
@@ -1012,6 +1015,10 @@
                 <button type="button" id="btn-fav-loc" class="btn-ghost" style="padding:6px 10px;white-space:nowrap;font-size:12px" title="Save to favourites">★</button>
               </div>
             </div>
+            <div class="field">
+              <label>Terrain Layout <span class="opt">optional</span></label>
+              <input id="f-terrain" type="number" inputmode="numeric" min="1" placeholder="e.g. 3" value="${eg!=null&&eg.terrain!=null?eg.terrain:''}">
+            </div>
             <div class="check-field" style="gap:22px;flex-wrap:wrap;">
               <span style="display:flex;align-items:center;gap:10px;">
                 <input type="checkbox" id="f-first" ${eg&&eg.youFirst===true?"checked":""}>
@@ -1181,7 +1188,7 @@
             ${dispLine}
             ${subLine}
             ${moreInfo}
-            <div class="meta">${fmtDate(g.date)}${g.location?`<span class="loc">${esc(g.location)}</span>`:""}</div>
+            <div class="meta">${fmtDate(g.date)}${g.location?`<span class="loc">${esc(g.location)}</span>`:""}${g.terrain!=null?`<span class="loc">Layout ${g.terrain}</span>`:""}</div>
           </div>
           <div class="right">
             <div class="score"><span class="mine">${g.youScore}</span><span class="sep">–</span>${g.oppScore}</div>
@@ -1560,7 +1567,7 @@
           date:val("f-date")||games[idx].date,
           youFaction:youF, youName:val("f-youN"), youDetachments,
           oppFaction:oppF, oppName:val("f-oppN"), oppDetachments,
-          location:val("f-loc"), youScore:ys, oppScore:os, youFirst, youDeployedFirst, youPainted, oppPainted,
+          location:val("f-loc"), terrain:numOrNull("f-terrain"), youScore:ys, oppScore:os, youFirst, youDeployedFirst, youPainted, oppPainted,
           youPrimary, youSecondary, oppPrimary, oppSecondary,
           youDisposition, oppDisposition
         };
@@ -1575,7 +1582,7 @@
       date:val("f-date")||today(),
       youFaction:youF, youName:val("f-youN"), youDetachments,
       oppFaction:oppF, oppName:val("f-oppN"), oppDetachments,
-      location:val("f-loc"),
+      location:val("f-loc"), terrain:numOrNull("f-terrain"),
       youScore:ys, oppScore:os, youFirst, youDeployedFirst, youPainted, oppPainted,
       youPrimary, youSecondary, oppPrimary, oppSecondary,
       youDisposition, oppDisposition
