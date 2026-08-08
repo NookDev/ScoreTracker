@@ -478,21 +478,7 @@
     color:var(--brass);border:1px solid rgba(184,145,72,.4);padding:1px 6px;border-radius:2px;
     white-space:nowrap;
   }
-  .log-radio-row{
-    display:flex;gap:4px;margin-bottom:12px;
-  }
-  .log-radio-row label{
-    display:flex;align-items:center;gap:6px;cursor:pointer;
-    font-family:"Oswald",sans-serif;font-size:11px;letter-spacing:.1em;text-transform:uppercase;
-    color:var(--bone-dim);padding:5px 12px;border:1px solid var(--line);border-radius:2px;
-    transition:border-color .15s,color .15s;
-  }
-  .log-radio-row input[type=radio]{accent-color:var(--brass);cursor:pointer}
-  .log-radio-row label:has(input:checked){border-color:var(--brass);color:var(--brass);}
-  /* fallback for browsers without :has */
-  @supports not selector(:has(*)){
-    .log-radio-row label{border-color:var(--line);color:var(--bone-dim);}
-  }
+  .log-toggle-row{margin-bottom:12px;}
   .tourn-round-wrap{display:none;align-items:center;gap:6px;font-family:"Oswald",sans-serif;font-size:12px;letter-spacing:.08em;color:var(--bone-dim);}
   .tourn-round-wrap select{width:64px;}
   .tourn-round-wrap.visible{display:flex;}
@@ -1114,6 +1100,7 @@
               </span>
               <span class="tourn-round-wrap${eg&&eg.tournament?" visible":""}">
                 Round <input id="f-tourn-round" type="number" inputmode="numeric" min="1" max="99" style="width:52px" value="${eg&&eg.tournamentRound!=null?eg.tournamentRound:1}">
+                <input id="f-tourn-name" placeholder="Event name" autocomplete="off" autocapitalize="sentences" style="flex:1;min-width:120px" value="${esc(eg&&eg.tournamentName?eg.tournamentName:"")}">
               </span>
             </div>
           </div>
@@ -1160,11 +1147,11 @@
 
       <section class="sec">
         <div class="sec-head"><h2>Battle Log</h2><span class="hint">${filteredLog.length} shown &nbsp;<button id="btn-log-sort" class="btn-ghost" style="font-size:11px;padding:4px 8px">${logSort==="desc"?"↓ Newest":"↑ Oldest"}</button></span></div>
-        <div class="log-radio-row">
-          <label><input type="radio" name="log-tourn" value="all" ${logTournFilter==="all"?"checked":""}> All</label>
-          <label><input type="radio" name="log-tourn" value="tournament" ${logTournFilter==="tournament"?"checked":""}> Tournament</label>
-          <label><input type="radio" name="log-tourn" value="casual" ${logTournFilter==="casual"?"checked":""}> Non-Tournament</label>
-        </div>
+        <div class="log-toggle-row"><span class="toggle">
+          <button class="tg ${logTournFilter==="all"?"on":""}" data-logtourn="all">All</button>
+          <button class="tg ${logTournFilter==="tournament"?"on":""}" data-logtourn="tournament">Tournament</button>
+          <button class="tg ${logTournFilter==="casual"?"on":""}" data-logtourn="casual">Friendly</button>
+        </span></div>
         ${renderLedger(filteredLog)}
       </section>
 
@@ -1280,7 +1267,7 @@
             ${dispLine}
             ${subLine}
             ${moreInfo}
-            <div class="meta">${fmtDate(g.date)}${g.tournament?`<span class="loc"><span class="tourn-badge">T·R${g.tournamentRound??1}</span></span>`:""}${g.gameSize&&g.gameSize!=="strike-force"?`<span class="loc">${esc((GAME_SIZES.find(s=>s.value===g.gameSize)||{label:g.gameSize}).label)}</span>`:""}${g.location?`<span class="loc">${esc(g.location)}</span>`:""}${g.terrain!=null?`<span class="loc">Layout ${g.terrain}</span>`:""}${g.deployment?`<span class="loc">${esc(g.deployment)}</span>`:""}</div>
+            <div class="meta">${fmtDate(g.date)}${g.tournament?`<span class="loc"><span class="tourn-badge">${g.tournamentName?esc(g.tournamentName)+` · R${g.tournamentRound??1}`:`T·R${g.tournamentRound??1}`}</span></span>`:""}${g.gameSize&&g.gameSize!=="strike-force"?`<span class="loc">${esc((GAME_SIZES.find(s=>s.value===g.gameSize)||{label:g.gameSize}).label)}</span>`:""}${g.location?`<span class="loc">${esc(g.location)}</span>`:""}${g.terrain!=null?`<span class="loc">Layout ${g.terrain}</span>`:""}${g.deployment?`<span class="loc">${esc(g.deployment)}</span>`:""}</div>
           </div>
           <div class="right">
             <div class="score"><span class="mine">${g.youScore}</span><span class="sep">–</span>${g.oppScore}</div>
@@ -1571,9 +1558,9 @@
       tournCb.addEventListener("change",()=>{ tournRoundWrap.classList.toggle("visible",tournCb.checked); });
     }
 
-    // Battle log tournament filter radios
-    document.querySelectorAll("input[name='log-tourn']").forEach(r=>{
-      r.addEventListener("change",e=>{ logTournFilter=e.target.value; render(); });
+    // Battle log tournament filter toggle
+    document.querySelectorAll(".tg[data-logtourn]").forEach(b=>{
+      b.addEventListener("click",()=>{ logTournFilter=b.getAttribute("data-logtourn"); render(); });
     });
 
     // More Stats open/close memory
@@ -1698,6 +1685,7 @@
     const tournament=tournEl?tournEl.checked:false;
     const tournRoundRaw=val("f-tourn-round");
     const tournamentRound=tournament&&tournRoundRaw!==""?Math.max(1,parseInt(tournRoundRaw,10)||1):null;
+    const tournamentName=tournament?val("f-tourn-name")||null:null;
     if(editingId){
       const idx=games.findIndex(g=>g.id===editingId);
       if(idx!==-1){
@@ -1706,7 +1694,7 @@
           youFaction:youF, youName:val("f-youN"), youDetachments,
           oppFaction:oppF, oppName:val("f-oppN"), oppDetachments,
           location:val("f-loc"), terrain:val("f-terrain")||null, deployment:val("f-deployment")||null, gameSize:val("f-gameSize")||"strike-force",
-          tournament, tournamentRound,
+          tournament, tournamentRound, tournamentName,
           youScore:ys, oppScore:os, youFirst, youDeployedFirst, youPainted, oppPainted,
           youPrimary, youSecondary, oppPrimary, oppSecondary,
           youDisposition, oppDisposition
@@ -1723,7 +1711,7 @@
       youFaction:youF, youName:val("f-youN"), youDetachments,
       oppFaction:oppF, oppName:val("f-oppN"), oppDetachments,
       location:val("f-loc"), terrain:val("f-terrain")||null, deployment:val("f-deployment")||null, gameSize:val("f-gameSize")||"strike-force",
-      tournament, tournamentRound,
+      tournament, tournamentRound, tournamentName,
       youScore:ys, oppScore:os, youFirst, youDeployedFirst, youPainted, oppPainted,
       youPrimary, youSecondary, oppPrimary, oppSecondary,
       youDisposition, oppDisposition
