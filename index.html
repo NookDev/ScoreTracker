@@ -478,6 +478,7 @@
     color:var(--brass);border:1px solid rgba(184,145,72,.4);padding:1px 6px;border-radius:2px;
     white-space:nowrap;
   }
+  .player-tourneys{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px;}
   .log-toggle-row{margin-bottom:12px;}
   .tourn-round-wrap{display:none;align-items:center;gap:6px;font-family:"Oswald",sans-serif;font-size:12px;letter-spacing:.08em;color:var(--bone-dim);}
   .tourn-round-wrap select{width:64px;}
@@ -1386,7 +1387,8 @@
     const unsorted=Object.keys(map).map(k=>{
       const s=tally(map[k]);
       const diff=map[k].reduce((sum,g)=>sum+(g.youScore-g.oppScore),0);
-      return {key:k,...s,diff};
+      const tournNames=[...new Set(map[k].filter(g=>g.tournament&&g.tournamentName).map(g=>g.tournamentName))];
+      return {key:k,...s,diff,tournNames};
     });
     if(!unsorted.length) return `<div class="empty"><div class="big">No named opponents</div>Add an opponent player name when logging a game.</div>`;
     // nemesis = largest cumulative score deficit (most negative diff, must have at least one loss)
@@ -1409,7 +1411,7 @@
         const isNemesis=r.key===nemesis&&r.l>0;
         const isPunchbag=r.key===punchbag&&r.w>0;
         return `<tr class="${isNemesis?"nemesis-row":isPunchbag?"punchbag-row":""}">
-          <td>${esc(r.key)}${isNemesis?`<span class="nemesis-badge">☠ Nemesis</span>`:""}${isPunchbag?`<span class="punchbag-badge">⚔ Punching Bag</span>`:""}</td>
+          <td>${esc(r.key)}${isNemesis?`<span class="nemesis-badge">☠ Nemesis</span>`:""}${isPunchbag?`<span class="punchbag-badge">⚔ Punching Bag</span>`:""}${r.tournNames.length?`<span class="player-tourneys">${r.tournNames.map(n=>`<span class="tourn-badge">${esc(n)}</span>`).join("")}</span>`:""}</td>
           <td>${r.t}</td>
           <td class="mini-rec">${r.w}–${r.l}–${r.d}</td>
           <td class="wr">${r.rate}%</td>
