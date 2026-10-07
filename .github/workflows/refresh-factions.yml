@@ -51,6 +51,6 @@ jobs:
             mkdir -p ~/.ssh
             echo "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/deploy_key
             chmod 600 ~/.ssh/deploy_key
-            ssh-keyscan -p 22 103.249.238.92 >> ~/.ssh/known_hosts
-            scp -i ~/.ssh/deploy_key -P 22 index.html scoret@103.249.238.92:/home/scoret/public_html/index.html
+            ssh-keyscan -p 22 103.249.236.162 >> ~/.ssh/known_hosts
+            scp -i ~/.ssh/deploy_key -P 22 index.html scoret@103.249.236.162:/home/scoret/public_html/index.html
           fi
