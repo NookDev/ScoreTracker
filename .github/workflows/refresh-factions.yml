@@ -1,0 +1,34 @@
+name: Refresh faction data
+
+on:
+  schedule:
+    - cron: '0 6 * * *'   # Every day at 06:00 UTC
+  workflow_dispatch:        # Allow manual trigger from Actions tab
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - run: pip install pyyaml
+
+      - name: Run refresh script
+        run: python scripts/refresh-factions.py
+
+      - name: Commit if data changed
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git diff --quiet && echo "No changes, skipping commit." || (
+            git add index.html
+            git commit -m "chore: refresh BSData faction snapshot ($(date -u '+%Y-%m-%d'))"
+            git push
+          )
