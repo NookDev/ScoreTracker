@@ -861,7 +861,8 @@
     let initial=true;
     function updateDisp(){
       const el=document.getElementById(`disp-${side}`);
-      if(el) el.innerHTML=dispBlockHTML(side,count,initial?preferredDisp:null);
+      const cur=document.getElementById(`disp-sel-${side}`);
+      if(el) el.innerHTML=dispBlockHTML(side,count,initial?preferredDisp:(cur?cur.value:null));
       initial=false;
     }
     function updateDP(){
@@ -1458,8 +1459,10 @@
     });
     const wrap = document.getElementById(`det-wrap-${side}`);
     if(!wrap) return;
+    const curDisp = document.getElementById(`disp-sel-${side}`);
+    const keepDisp = curDisp ? curDisp.value : null;
     wrap.outerHTML = renderDetFields(side, faction, dets, count, currentDPBudget());
-    wireDetSide(side, count);
+    wireDetSide(side, count, keepDisp);
     // re-attach add/rem listeners on the newly inserted buttons
     document.querySelectorAll(`.det-add[data-side="${side}"],.det-rem[data-side="${side}"]`).forEach(b=>{
       b.addEventListener("click",()=>{
