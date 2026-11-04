@@ -605,7 +605,7 @@
     <p class="eyebrow">Warhammer 40,000 · 11th Edition</p>
     <h1>Campaign Ledger</h1>
     <div class="sub">Personal Battle Record</div>
-    <div class="updated-note">Updated 23 Oct 2026</div>
+    <div class="updated-note">Updated 4 Nov 2026</div>
   </header>
 
   <div id="app">
@@ -616,9 +616,15 @@
   <div id="visitor-footer"></div>
   <details class="entry-more" style="margin-top:18px;text-align:center;">
     <summary>Changelog</summary>
-    <div class="entry-more-body" style="flex-direction:column;gap:6px;margin-top:10px;">
+    <div id="changelog-body" class="entry-more-body" style="flex-direction:column;gap:6px;margin-top:10px;">
       <div style="font-family:'Oswald',sans-serif;font-size:10px;letter-spacing:.1em;color:var(--bone-dim);">
-        <span style="color:var(--brass);margin-right:8px;">2026-11-04</span>Dispositions restored — detachments with more than one disposition now offer a dropdown
+        <span style="color:var(--brass);margin-right:8px;">2026-11-04</span>Fix: stray changelog text no longer appears in battle log More Info
+      </div>
+      <div style="font-family:'Oswald',sans-serif;font-size:10px;letter-spacing:.1em;color:var(--bone-dim);">
+        <span style="color:var(--brass);margin-right:8px;">2026-11-04</span>Fix: your and your opponent’s disposition picks are kept when changing detachments or game size
+      </div>
+      <div style="font-family:'Oswald',sans-serif;font-size:10px;letter-spacing:.1em;color:var(--bone-dim);">
+        <span style="color:var(--brass);margin-right:8px;">2026-11-04</span>Dispositions restored — you and your opponent each get a dropdown when a detachment has more than one
       </div>
       <div style="font-family:'Oswald',sans-serif;font-size:10px;letter-spacing:.1em;color:var(--bone-dim);">
         <span style="color:var(--brass);margin-right:8px;">2026-10-23</span>Detachments updated: Adeptus Custodes, Black Templars, Imperial Knights, Necrons, Space Marines, T’au Empire
@@ -1282,10 +1288,7 @@
       if(g.youPainted) moreFlags.push("My army painted");
       if(g.oppPainted) moreFlags.push("Opponent painted");
       const moreInfo=moreFlags.length
-        ?`<details class="entry-more" open><summary>More Info</summary><div class="entry-more-body">${moreFlags.map(f=>`<span class="entry-flag">${f}</span>`).join("")}</div></details>
-      <div style="font-family:'Oswald',sans-serif;font-size:10px;letter-spacing:.1em;color:var(--bone-dim);">
-        <span style="color:var(--brass);margin-right:8px;">2026-10-23</span>Detachments updated: Adeptus Custodes, Black Templars, Imperial Knights, Necrons, Space Marines, T’au Empire
-      </div>`
+        ?`<details class="entry-more" open><summary>More Info</summary><div class="entry-more-body">${moreFlags.map(f=>`<span class="entry-flag">${f}</span>`).join("")}</div></details>`
         :"";
       return `
         <div class="entry" style="border-left-color:${allegianceColor(g.youFaction)}">

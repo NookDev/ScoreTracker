@@ -41,7 +41,7 @@ jobs:
 
             # Prepend a changelog entry
             ENTRY="      <div style=\"font-family:'Oswald',sans-serif;font-size:10px;letter-spacing:.1em;color:var(--bone-dim);\">\\n        <span style=\"color:var(--brass);margin-right:8px;\">${TODAY_SHORT}<\\/span>Detachments updated: ${CHANGED}\\n      <\\/div>"
-            sed -i "s|<div class=\"entry-more-body\".*>|&\n${ENTRY}|" index.html
+            sed -i "s|<div id=\"changelog-body\".*>|&\n${ENTRY}|" index.html
 
             git add index.html
             git commit -m "chore: refresh BSData faction snapshot (${TODAY_SHORT}) — ${CHANGED}"
