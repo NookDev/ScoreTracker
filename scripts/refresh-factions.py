@@ -98,9 +98,9 @@ def main():
             detachments[name] = dets
             for x in det_list:
                 det_name = clean(x["name"])
-                obj = x.get("objective")
-                if obj:
-                    dispositions[det_name] = obj
+                objs = x.get("objectives") or ([x["objective"]] if x.get("objective") else [])
+                if objs:
+                    dispositions[det_name] = list(objs)
                 dp = x.get("dp")
                 if dp is not None:
                     dp_costs[det_name] = int(dp)
