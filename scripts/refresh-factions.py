@@ -22,7 +22,18 @@ import json
 import tarfile
 import urllib.request
 
-REPO_TARBALL = "https://codeload.github.com/BSData/wh40k-11e-mfm/tar.gz/refs/heads/main"
+# Override with env BSDATA_TARBALL (e.g. a GitHub repo variable) to point at a
+# fork/mirror if the upstream repo is taken down.
+REPO_TARBALL = (
+    os.environ.get("BSDATA_TARBALL")
+    or "https://codeload.github.com/BSData/wh40k-11e-mfm/tar.gz/refs/heads/main"
+)
+
+# Safety guard: refuse to overwrite the snapshot if the source looks gutted
+# (DMCA strip, emptied repo, broken parse). Set ALLOW_SHRINK=1 to bypass for a
+# deliberate, reviewed update.
+MIN_FACTION_RATIO = 1.0      # no faction may disappear
+MIN_DETACHMENT_RATIO = 0.9   # total detachments may not drop more than 10%
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 HTML = os.path.normpath(os.path.join(HERE, "..", "index.html"))
@@ -54,14 +65,47 @@ def clean(name: str) -> str:
     return " ".join(out)
 
 
+def current_snapshot(html):
+    """Return (faction names, total detachments) from the embedded block."""
+    fg = re.search(r"const FACTION_GROUPS=(\[.*?\]);\n", html)
+    dt = re.search(r"const DETACHMENTS=(\{.*?\});\n", html)
+    if not fg or not dt:
+        return set(), 0
+    names = {f for g in json.loads(fg.group(1)) for f in g["f"]}
+    return names, sum(len(v) for v in json.loads(dt.group(1)).values())
+
+
+def check_not_gutted(html, faction_groups, detachments, total):
+    if os.environ.get("ALLOW_SHRINK") == "1":
+        print("  ALLOW_SHRINK=1 set, skipping shrink guard")
+        return
+    old_names, old_total = current_snapshot(html)
+    if not old_names:
+        return
+    new_names = {f for g in faction_groups for f in g["f"]}
+    lost = sorted(old_names - new_names)
+    problems = []
+    if len(new_names) < len(old_names) * MIN_FACTION_RATIO:
+        problems.append(f"factions {len(old_names)} -> {len(new_names)} (lost: {', '.join(lost)})")
+    if total < old_total * MIN_DETACHMENT_RATIO:
+        problems.append(f"detachments {old_total} -> {total}")
+    if problems:
+        sys.exit("Source data looks gutted, snapshot left unchanged:\n  "
+                 + "\n  ".join(problems)
+                 + "\nRe-run with ALLOW_SHRINK=1 if this is a genuine update.")
+
+
 def main():
     try:
         import yaml
     except ImportError:
         sys.exit("Missing dependency: pip install pyyaml")
 
-    print("Downloading BSData/wh40k-11e-mfm ...")
-    raw = urllib.request.urlopen(REPO_TARBALL, timeout=60).read()
+    print(f"Downloading {REPO_TARBALL} ...")
+    try:
+        raw = urllib.request.urlopen(REPO_TARBALL, timeout=60).read()
+    except Exception as e:
+        sys.exit(f"Source unavailable ({e}). Snapshot left unchanged.")
     tar = tarfile.open(fileobj=io.BytesIO(raw), mode="r:gz")
 
     # slug -> parsed yaml dict
@@ -120,6 +164,7 @@ def main():
     )
 
     html = open(HTML, encoding="utf-8").read()
+    check_not_gutted(html, faction_groups, detachments, total)
     pattern = re.compile(
         r"  // === BSDATA:START.*?// === BSDATA:END ===", re.S
     )
