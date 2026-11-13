@@ -21,6 +21,10 @@ jobs:
       - run: pip install pyyaml
 
       - name: Run refresh script
+        # Fails (no commit, no deploy) if the source is down or looks gutted.
+        # Set repo variable BSDATA_TARBALL to a fork/mirror tarball URL to switch source.
+        env:
+          BSDATA_TARBALL: ${{ vars.BSDATA_TARBALL }}
         run: python scripts/refresh-factions.py
 
       - name: Commit if data changed

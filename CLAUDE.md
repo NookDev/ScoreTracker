@@ -67,6 +67,10 @@ preview — that's expected once it's hosted for real.
   (`FACTION_GROUPS` and `DETACHMENTS`). **Do not hand-edit between those markers.**
 - To refresh after the repo changes: `python3 scripts/refresh-factions.py`
   (needs `pyyaml`). It re-downloads, regenerates, and splices the block back in.
+- The refresh aborts (snapshot untouched, nothing deployed) if the source is
+  unreachable or any faction / >10% of detachments disappear. Override with
+  `ALLOW_SHRINK=1`. Switch source with env/repo variable `BSDATA_TARBALL`
+  (tarball URL of a fork or mirror) if upstream is taken down.
 - Coverage: 28 mainline factions, 339 detachments. The two empty "Titan Legions"
   entries are intentionally excluded. `enhancements` exist in the source but are
   not used in the app yet.
